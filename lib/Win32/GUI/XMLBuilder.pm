@@ -4,7 +4,7 @@
 #
 # 14 Dec 2003 by Blair Sutton <b.sutton@odey.com>
 #
-# Version: 0.2 (29 Feb 2004)
+# Version: 0.21 (29 Feb 2004)
 #
 # Copyright (c) 2004 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -117,7 +117,7 @@ use strict;
 
 require Exporter;
 
-our $VERSION = 0.02;
+our $VERSION = 0.21;
 our @ISA     = qw(Exporter);
 our @EXPORT  = qw(%GUI);
 
