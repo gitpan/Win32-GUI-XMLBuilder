@@ -2,15 +2,22 @@ Win32::GUI::Button
 ==================
 map threestate => 3state
 
+Win32::GUI::Font
+================
+'size' attribute confused with array
+
 Win32::GUI::ImageList
 =====================
 support Icon, Masked
+
+Win32::GUI::Toolbar
+===================
+Add subitem support
 
 Need to support these objects
 =============================
 Win32::GUI::DC
 Win32::GUI::Region
-Win32::GUI::Toolbar
 Win32::GUI::Trackbar
 
 Wishlist

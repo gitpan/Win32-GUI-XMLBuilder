@@ -1,5 +1,12 @@
 CHANGES
 
+0.31 -> 0.32
+Fix print to STDERR in Rebar bug.
+Remove errors on insertItems subs.
+Use pushstyles instead of style.
+Fix bug where LRs Grid|DIBitmap|AxWindow|Scintilla modules break
+ since they use parent attribute.
+
 0.30 -> 0.31
 Support DialogBox, MDI, Timer, Accelerator widgets/objects.
 Fixed bug in _Generic constructors parent attribute (also fixes systray.xml example).

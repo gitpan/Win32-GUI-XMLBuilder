@@ -4,7 +4,7 @@
 #
 # 14 Dec 2003 by Blair Sutton <b.sutton@odey.com>
 #
-# Version: 0.31 (13th June 2004)
+# Version: 0.32 (15th June 2004)
 #
 # Copyright (c) 2004 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.31;
+our $VERSION = 0.32;
 our @ISA     = qw(Exporter);
 
 our $AUTHOR = "Blair Sutton - 2004 - Win32::GUI::XMLBuilder - $VERSION";
@@ -105,7 +105,6 @@ when one wants to create dynamically sizing windows: -
 	<Window name='W'
 	 left='0' top='0' 
 	 width='400' height='200' 
-	 style='exec:WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW'
 	>
 	 <StatusBar name='S' 
 	  left='0' top='$self->{W}->ScaleHeight-$self->{S}->Height' 
@@ -239,8 +238,10 @@ sub debug {
 
 sub error {
 	my $self = shift;
-	$self->debug("Win32:GUI::XMLBuilder error: $^E $!");
-	print STDERR "Win32:GUI::XMLBuilder error: $^E $!\n";
+	my $sub  = (caller(1))[3];
+	my $line  = (caller(1))[2];
+	$self->debug("$sub error on line $line: $^E $!");
+	print STDERR "$sub error on line $line: $^E $!\n";
 }
 
 =head1 METHODS
@@ -685,7 +686,7 @@ sub TreeView_Item {
 		my $iname = $item->{'att'}->{'name'};
 		$self->debug("Item: $iname; Parent: $name");
 		$item->{'att'}->{'parent'} = "\$self->{$name}" if $name ne $parent;
-		$self->{$iname} = $self->{$parent}->InsertItem($self->evalhash($item)) || $self->error;
+		$self->{$iname} = $self->{$parent}->InsertItem($self->evalhash($item));
 		if($item->children_count()) {
 			$self->TreeView_Item($item, $parent);
 		}
@@ -696,7 +697,7 @@ sub TreeView_Item {
 
 Generate a combobox with drop down items specified with the <Items> elements. In addition
 to standard attributes for Win32::GUI::Combobox there is also a 'dropdown' attribute that
-automatically sets the 'style' to 'exec:WS_VISIBLE|0x3|WS_VSCROLL|WS_TABSTOP'. In 'dropdown'
+automatically sets the 'pushstyle' to 'exec:WS_VISIBLE|0x3|WS_VSCROLL|WS_TABSTOP'. In 'dropdown'
 mode an <Item> element has the additional attribute 'default'.
 
 =cut
@@ -708,9 +709,9 @@ sub Combobox {
 
 	$self->debug("\nCombobox: $name; Parent: $parent");
     
-	$e->{'att'}->{'style'} = 'exec:WS_VISIBLE|0x3|WS_VSCROLL|WS_TABSTOP' if $e->{'att'}->{'dropdown'};
+	$e->{'att'}->{'pushstyle'} = 'exec:WS_VISIBLE|0x3|WS_VSCROLL|WS_TABSTOP' if $e->{'att'}->{'dropdown'};
     
-	$self->{$name} = $self->{$parent}->AddCombobox($self->evalhash($e))  || $self->error;
+	$self->{$name} = $self->{$parent}->AddCombobox($self->evalhash($e)) || $self->error;
 
 	my $default;
 	if($e->children_count()) {
@@ -719,7 +720,7 @@ sub Combobox {
 			my $text = $item->{'att'}->{'text'};
 			$default = $text if $item->{'att'}->{'default'};
 			$self->debug("Item: $text");
-			$self->{$name}->InsertItem($text) || $self->error;
+			$self->{$name}->InsertItem($text);
 		}
 	}
 
@@ -730,7 +731,7 @@ sub Combobox {
 
 Generate a listbox with drop down items specified with the <Items> elements. In addition
 to standard attributes for Win32::GUI::Listbox there is also a 'dropdown' attribute that
-automatically sets the 'style' to 'exec:WS_CHILD|WS_VISIBLE|1'. In 'dropdown' mode an <Item> element has
+automatically sets the 'pushstyle' to 'exec:WS_CHILD|WS_VISIBLE|1'. In 'dropdown' mode an <Item> element has
 the additional attribute 'default'.
 
 =cut
@@ -741,7 +742,7 @@ sub Listbox {
 	my $parent = $e->parent()->{'att'}->{'name'};
 
 	$self->debug("\nListbox: $name; Parent: $parent");
-	$e->{'att'}->{'style'} = $e->{'att'}->{'dropdown'} ? 'exec:WS_VSCROLL|WS_CHILD|WS_VISIBLE|1' : 'exec:WS_VSCROLL|WS_VISIBLE|WS_CHILD';
+	$e->{'att'}->{'pushstyle'} = $e->{'att'}->{'dropdown'} ? 'exec:WS_VSCROLL|WS_CHILD|WS_VISIBLE|1' : 'exec:WS_VSCROLL|WS_VISIBLE|WS_CHILD';
 	$self->{$name} = $self->{$parent}->AddListbox($self->evalhash($e))  || $self->error;
 
  # $self->{$name}->SendMessage(0x0195, 201, 0);
@@ -753,7 +754,7 @@ sub Listbox {
 			my $text = $item->{'att'}->{'text'};
 			$default = $text if $item->{'att'}->{'default'};
 			$self->debug("Item: $text");
-			$self->{$name}->AddString($text) || $self->error;
+			$self->{$name}->AddString($text);
 		}
 	}
 
@@ -783,7 +784,6 @@ sub Rebar {
 		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD';
 		# push non-Band attributes into Window class
 		foreach (keys %{$item->{'att'}}) {
-			print "###$_ -> $item->{'att'}->{$_}\n";
 			if ($_ !~ /^(image|index|bitmap|child|foreground|background|width|minwidth|minheight|text|style)$/) {
 				$f->{'att'}->{$_} = $item->{'att'}->{$_};
 			}
@@ -848,7 +848,12 @@ sub _Generic {
 	my $parent = $e->parent()->{'att'}->{'name'};
 
 	$self->debug("\n$widget (_Generic): $name; Parent: $parent");
-	$self->{$name} = eval "new Win32::GUI::$widget(\$self->{$parent}, \$self->evalhash(\$e))"  || $self->error;
+	if ($widget =~ /^(Grid|DIBitmap|AxWindow|Scintilla)$/) {
+		$e->{'att'}->{'parent'} = "\$self->{$parent}";
+		$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
+	} else {
+		$self->{$name} = eval "new Win32::GUI::$widget(\$self->{$parent}, \$self->evalhash(\$e))" || $self->error;
+	}
 }
 
 1;
