@@ -1,5 +1,12 @@
 CHANGES
 
+0.33 -> 0.34
+Fixed doc error SplitterPair -> WGXSplitter.
+Replace internal _context_ var with getParent func.
+ Thus removed need for _resize_ internal var.
+Now allows top level widgets as children, see modal2.xml example.
+Default dimensions to parent if parent a top level.
+
 0.32 -> 0.33
 Implemented TabStrip (TabFrame now deprecated, please update your progs!)
 Internal rewrite to allow for special new elements.

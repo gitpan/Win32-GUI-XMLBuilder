@@ -2,9 +2,9 @@
 #
 # Win32::GUI::XMLBuilder
 #
-# 14 Dec 2003 by Blair Sutton <b.sutton@odey.com>
+# 14 Dec 2003 by Blair Sutton <bsdz@cpan.org>
 #
-# Version: 0.33 (25th June 2004)
+# Version: 0.34 (27th June 2004)
 #
 # Copyright (c) 2004 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.33;
+our $VERSION = 0.34;
 our @ISA     = qw(Exporter);
 
 our $AUTHOR = "Blair Sutton - 2004 - Win32::GUI::XMLBuilder - $VERSION";
@@ -45,7 +45,7 @@ XMLBuilder - Build Win32::GUIs using XML.
 
 	__END__
 	<GUI>
-	
+
 	..
 	</GUI>
 
@@ -102,18 +102,55 @@ contains the variable '$self' or starts with 'exec:' will be evaluated. This is 
 when one wants to create dynamically sizing windows: -
 
 	<Window name='W'
-	 left='0' top='0' 
-	 width='400' height='200' 
+	 left='0' top='0'
+	 width='400' height='200'
 	>
-	 <StatusBar name='S' 
-	  left='0' top='$self->{W}->ScaleHeight-$self->{S}->Height' 
+	 <StatusBar name='S'
+	  left='0' top='$self->{W}->ScaleHeight-$self->{S}->Height'
 	  width='$self->{W}->ScaleWidth' height='$self->{S}->Height'
 	 />
 	</Window>
 
-NOTE: pos and size attributes are supported but converted to top, left, height and width
+=head1 SPECIFYING DIMENSIONS
+
+'pos' and 'size' attributes are supported but converted to top, left, height and width
 attributes on parsing. I suggest using the attribute dim='left,top,width,height' instead
 (not an array but an list with brackets).
+
+=cut
+
+sub expandDimensions {
+	my ($self, $H) = @_;
+
+	if (exists $$H{pos}) {
+		if ($$H{pos} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
+			($$H{top}, $$H{left}) = ($1, $2);
+			delete $$H{pos};
+		} else {
+			$self->debug("Failed to parse pos '$$H{pos}', should have format '[top, left]'");
+		}
+	}
+
+	if (exists $$H{size}) {
+		if ($$H{size} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
+			($$H{width}, $$H{height}) = ($1, $2);
+			delete $$H{size};
+		} else {
+			$self->debug("Failed to parse size '$$H{size}', should have format '[width, height]'");
+		}
+	}
+
+	if (exists $$H{dim}) {
+		if ($$H{dim} =~ m/^\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*$/) {
+			($$H{left}, $$H{top}, $$H{width}, $$H{height}) = ($1, $2, $3, $4);
+			delete $$H{dim};
+		} else {
+			$self->debug("Failed to parse dim '$$H{dim}', should have format 'left, top, width, height'");
+		}
+	}
+
+	return $H;
+}
 
 =head1 AUTO-RESIZING
 
@@ -121,7 +158,42 @@ Win32::GUI::XMLBuilder will autogenerate an onResize NEM method by reading in va
 This will work sufficiently well provided you use values that are dynamic such as $self->{PARENT_WIDGET}->Width,
 $self->{PARENT_WIDGET}->Height for width, height attributes respectively when creating new widget elements.
 
-=head1 NEM Events
+=cut
+
+sub genresize {
+	my ($self, $name) = @_;
+
+	my $coderef = eval "{
+		package main; no strict;
+		sub {
+			foreach (\@{\$self->{_worder_}{$name}}) {
+				my \$width = eval \$self->{_width_}{$name}{\$_};
+				\$self->debug(\"\$_: Width to \$self->{_width_}{$name}{\$_} = \$width\");
+				\$self->{\$_}->Width(\$width) if \$_ ne '$name';
+			}
+			foreach (\@{\$self->{_horder_}{$name}}) {
+				my \$height = eval \$self->{_height_}{$name}{\$_};
+				\$self->debug(\"\$_: Height to \$self->{_height_}{$name}{\$_} = \$height\");
+				\$self->{\$_}->Height(\$height) if \$_ ne '$name';
+			}
+
+			foreach (\@{\$self->{_lorder_}{$name}}) {
+				my \$left = eval \$self->{_left_}{$name}{\$_};
+				\$self->debug(\"\$_: Left to \$self->{_left_}{$name}{\$_} = \$left\");
+				\$self->{\$_}->Left(\$left) if \$_ ne '$name';
+			}
+			foreach (\@{\$self->{_torder_}{$name}}) {
+				my \$top = eval \$self->{_top_}{$name}{\$_};
+				\$self->debug(\"\$_: Top to \$self->{_top_}{$name}{\$_} = \$top\");
+				\$self->{\$_}->Top(\$top) if \$_ ne '$name';
+			}
+		}
+	}";	print STDERR $@ if $@;
+	
+	return $coderef;
+}
+
+=head1 NEM EVENTS
 
 NEM events are supported. When specifying a NEM event such as onClick one must use $self syntax to specify current
 Win32::GUI::XMLBuilder object in anonymous subroutines. An attribute of notify='1' is added automatically when an
@@ -130,14 +202,27 @@ NEM event is called. One can alo specify other named subroutines by name, but do
 	onClick='my_sub' [CORRECT]
 	onClick='&my_sub' [INCORRECT]
 
+=head1 SIMPLE POSITION AND SIZE
+
+If no dimensions are given for an element whose direct parent is of a Top level widget type such as Window or DialogBox,
+it will assume a top and left of zero and and a width and height of its parent. I.e.
+
+	dim='0, 0, $self->{PARENT}->ScaleWidth, $self->{PARENT}->ScaleHeight'
+
 =cut
+
+my $qrTop = qr/(Window|DialogBox|MDIFrame)$/;
+my $qrFile = qr/(Icon|Bitmap|Cursor)$/;
+my $qrNoParent = qr/(Font|Class|Pen|Brush)$/;
+my $qrNoDim = qr/(NotifyIcon)$/;
+my $qrLRWidgets = qr/(Grid|DIBitmap|AxWindow|Scintilla|ScintillaPerl)$/;
 
 sub evalhash {
 	my ($self, $e) = @_;
 
 	my %in = %{$self->expandDimensions($e->{'att'})};
 	my %out;
-	
+
 	foreach my $k (sort keys %in) {
 		if ($k =~ /^on[A-Z]/) {
 			$out{-notify} = 1;
@@ -155,73 +240,67 @@ sub evalhash {
 
 		$self->debug("\t-$k : $in{$k} -> $out{-$k}");
 	}
-	
-	if (!$in{_nowidth_} && exists $in{width} && $in{width} ne '') {
-		$self->{_width_}{$self->{_context_}}{$out{-name}} = $in{width};
-		push @{$self->{_worder_}{$self->{_context_}}}, $out{-name};
+
+	my $parent = $self->getParent($e);
+	if (defined $parent) {
+
+		if (!$in{_nowidth_}) {
+			if (exists $in{width} && $in{width} ne '') {
+				$self->{_width_}{$parent}{$out{-name}} = $in{width};
+				push @{$self->{_worder_}{$parent}}, $out{-name};
+			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
+				$self->{_width_}{$parent}{$out{-name}} = "\$self->{$parent}->ScaleWidth"; # since we know $parent must be direct ancestor
+				push @{$self->{_worder_}{$parent}}, $out{-name};
+			}
+		}
+		
+		if (!$in{_noheight_}) {
+			if (exists $in{height} && $in{height} ne '') {
+				$self->{_height_}{$parent}{$out{-name}} = $in{height};
+				push @{$self->{_horder_}{$parent}}, $out{-name};
+			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
+				$self->{_height_}{$parent}{$out{-name}} = "\$self->{$parent}->ScaleHeight";
+				push @{$self->{_horder_}{$parent}}, $out{-name};
+			}
+		}
+		
+		if (!$in{_noleft_}) {
+			if (exists $in{left} && $in{left} ne '') {
+				$self->{_left_}{$parent}{$out{-name}} = $in{left};
+				push @{$self->{_lorder_}{$parent}}, $out{-name};
+			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
+				$self->{_left_}{$parent}{$out{-name}} = "0";
+				push @{$self->{_lorder_}{$parent}}, $out{-name};
+			}
+		}
+		
+		if (!$in{_notop_}) {
+			if (exists $in{top} && $in{top} ne '') {
+				$self->{_top_}{$parent}{$out{-name}} = $in{top};
+				push @{$self->{_torder_}{$parent}}, $out{-name};
+			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
+				$self->{_top_}{$parent}{$out{-name}} = "0";
+				push @{$self->{_torder_}{$parent}}, $out{-name};
+			}
+		}
 	}
-	
-	if (!$in{_noheight_} && exists $in{height} && $in{height} ne '') {
-		$self->{_height_}{$self->{_context_}}{$out{-name}} = $in{height};
-		push @{$self->{_horder_}{$self->{_context_}}}, $out{-name};
-	}
-	
-	if (!$in{_noleft_} && exists $in{left} && $in{left} ne '') {
-		$self->{_left_}{$self->{_context_}}{$out{-name}} = $in{left};
-		push @{$self->{_lorder_}{$self->{_context_}}}, $out{-name};
-	}
-	
-	if (!$in{_notop_} && exists $in{top} && $in{top} ne '') {
-		$self->{_top_}{$self->{_context_}}{$out{-name}} = $in{top};
-		push @{$self->{_torder_}{$self->{_context_}}}, $out{-name};
-	}
-	
+
 	return %out;
-}
-
-sub expandDimensions {
-	my ($self, $H) = @_;
-
-	if (exists $$H{pos}) {
-		if ($$H{pos} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
-			($$H{top}, $$H{left}) = ($1, $2);
-			delete $$H{pos};
-		} else {
-			$self->debug("Failed to parse pos '$$H{pos}', should have format '[top, left]'");
-		}
-	}
-	
-	if (exists $$H{size}) {
-		if ($$H{size} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
-			($$H{width}, $$H{height}) = ($1, $2);
-			delete $$H{size};
-		} else {
-			$self->debug("Failed to parse size '$$H{size}', should have format '[width, height]'");
-		}
-	}
-	
-	if (exists $$H{dim}) {
-		if ($$H{dim} =~ m/^\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*$/) {
-			($$H{left}, $$H{top}, $$H{width}, $$H{height}) = ($1, $2, $3, $4);
-			delete $$H{dim};
-		} else {
-			$self->debug("Failed to parse dim '$$H{dim}', should have format 'left, top, width, height'");
-		}
-	}
-	
-	return $H;
 }
 
 sub getParent {
 	my ($self, $e) = @_;
-	
-	my %TOPWIDGETS = (
-		'Win32::GUI::Window' => 1,
-		'Win32::GUI::DialogBox' => 1,
-		'Win32::GUI::MDIFrame' => 1,
-	);
-	
-	return  $e->parent(sub { return exists $TOPWIDGETS{ref $self->{$_[0]->{'att'}->{'name'}}} ? 1 : 0; })->{'att'}->{'name'};
+
+	if (ref $e ne 'XML::Twig::Elt' || $e->level == 1) {
+		return undef;
+	}
+
+	my $xmlparent = $e->parent(sub {
+		return ref($self->{$_[0]->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/ 
+	});
+
+	# should return undef if no parent found!
+	return $xmlparent->{'att'}->{'name'};
 }
 
 =head1 AUTO WIDGET NAMING
@@ -236,7 +315,7 @@ sub genname {
 	my ($self, $e) = @_;
 	if (!exists $e->{'att'}->{'name'} || $e->{'att'}->{'name'} eq '') {
 		my $i = 0;
-		while () { 
+		while () {
 			if (!exists $self->{$e->gi.'_'.$i}) {
 				$e->set_att(name=>$e->gi.'_'.$i);
 				last;
@@ -253,7 +332,7 @@ sub genname {
 
 =item WIN32GUIXMLBUILDER_DEBUG
 
-Setting this to 1 will produce logging. 
+Setting this to 1 will produce logging.
 
 =cut
 
@@ -281,22 +360,20 @@ sub error {
 sub new {
 	my $this = shift;
 	my $self = {};
-	$self->{_context_} = undef; # holds current proginitor Window name
-	$self->{_show_}    = undef; # $self->{_show_}{progenitor} = COMMAND
-	$self->{_width_}   = undef; # $self->{_width_}{progenitor}{child}
-	$self->{_worder_}  = undef; # $self->{_worder_}{progenitor} = (child1, child2, ...) - order of widgets to be resized
-	$self->{_height_}  = undef; # $self->{_height_}{progenitor}{child}
-	$self->{_horder_}  = undef; # $self->{_horder_}{progenitor} = (child1, child2, ...) - order of widgets to be resized
-	$self->{_left_}    = undef; # $self->{_left_}{progenitor}{child}
-	$self->{_lorder_}  = undef; # $self->{_lorder_}{progenitor} = (child1, child2, ...) - order of widgets to be resized
-	$self->{_top_}     = undef; # $self->{_top_}{progenitor}{child}
-	$self->{_torder_}  = undef; # $self->{_torder_}{progenitor} = (child1, child2, ...) - order of widgets to be resized
-	$self->{_resize_}  = undef; # $self->{_resize_}{progenitor} = coderef of onResize function
+	$self->{_show_}    = undef; # ...{parent} = COMMAND
+	$self->{_width_}   = undef; # ...{parent}{child}
+	$self->{_worder_}  = undef; # ...{parent} = (child1, child2, ...)
+	$self->{_height_}  = undef; # ...{parent}{child}
+	$self->{_horder_}  = undef; # ...{parent} = (child1, child2, ...)
+	$self->{_left_}    = undef; # ...{parent}{child}
+	$self->{_lorder_}  = undef; # ...{parent} = (child1, child2, ...)
+	$self->{_top_}     = undef; # ...{parent}{child}
+	$self->{_torder_}  = undef; # ...{parent} = (child1, child2, ...)
 
 	bless($self, (ref($this) || $this));
 
 	my $s = new XML::Twig(
-		TwigHandlers => { 
+		TwigHandlers => {
 			Script     => sub { $self->PreExec(@_) },
 			PreExec    => sub { $self->PreExec(@_) },
 		}
@@ -310,25 +387,26 @@ sub new {
 		$s->parse($_[0])
 	}
 
-	my $t = new XML::Twig( 
-		TwigHandlers => { 
-			Window           => sub { $self->_GenericTop(@_) },
-			DialogBox        => sub { $self->_GenericTop(@_) },
-			MDIFrame         => sub { $self->_GenericTop(@_) },
-			Icon             => sub { $self->_GenericFile(@_) },
-			Bitmap           => sub { $self->_GenericFile(@_) },
-			Cursor           => sub { $self->_GenericFile(@_) },
-			Font             => sub { $self->_GenericNoParent(@_) }, 
-			Class            => sub { $self->_GenericNoParent(@_) },
-			Pen              => sub { $self->_GenericNoParent(@_) },
-			Brush            => sub { $self->_GenericNoParent(@_) },
-			ImageList        => sub { $self->ImageList(@_) },
-			Menu             => sub { $self->Menu(@_) },
-			AcceleratorTable => sub { $self->AcceleratorTable(@_) },
-		}
-	);
-
+	my $t = new XML::Twig;
 	$t->parse($s->sprint);
+	my $root = $t->root; 
+	foreach ($root->children()) {
+		$self->debug($_->{'att'}->{'name'});
+		$self->debug($_->gi);
+
+		if (exists &{$_->gi}) {
+			&{\&{$_->gi}}($self, $t, $_);
+		}	
+		elsif ($_->gi =~ /^$qrTop/) {
+			$self->_GenericTop($t, $_);
+		} 
+		elsif ($_->gi =~ /^$qrFile/) {
+			$self->_GenericFile($t, $_);
+		} 
+		elsif ($_->gi =~ /^$qrNoParent/) {
+			$self->_GenericNoParent($t, $_);
+		}
+	}
 
 	foreach (sort keys %{$self->{_show_}}) {
 		$self->debug("show widget $_ with command ${$self->{_show_}}{$_}");
@@ -336,7 +414,7 @@ sub new {
 	}
 
 	my $u = new XML::Twig(
-		TwigHandlers => { 
+		TwigHandlers => {
 			PostExec    => sub { $self->PostExec(@_) },
 		}
 	);
@@ -362,14 +440,14 @@ are created they can contain variables in your program including Win32::GUI::XML
 The current Win32::GUI::XMLBuilder instance can also be accessed outside subroutines as $self.
 
 Since you may need to use a illegal XML characters within this element such as
-	
-	<  less than      (&lt;) 
+
+	<  less than      (&lt;)
 	>  greater than   (&gt;)
 	&  ampersand      (&amp;)
 	'  apostrophe     (&apos;)
 	"  quotation mark (&quot;)
 
-you can use the alternative predefined entity reference or enclose this data in a "<![CDATA[" "]]>" section. 
+you can use the alternative predefined entity reference or enclose this data in a "<![CDATA[" "]]>" section.
 Please look at the samples and read http://www.w3schools.com/xml/xml_cdata.asp.
 
 The <PreExec> element was previously called as <Script> and is deprecated. The <Script> tage remains
@@ -454,36 +532,36 @@ sub ImageList {
 	$self->debug("\nImageList: $name");
 	$self->{$name} = new Win32::GUI::ImageList($width, $height, 0, $initial, $growth) || $self->error;
 
-	foreach ($e->children()) { 
+	foreach ($e->children()) {
 		$self->{$name}->Add($_->{'att'}->{'bitmap'}, $_->{'att'}->{'mask'});
 		$self->debug($_->{'att'}->{'bitmap'});
 	}
 }
 
 =item <Font>
-	
+
 Allows you to create a font for use in your program.
 
-	<Font name='Bold' 
-	 size='8' 
-	 face='Arial' 
-	 bold='1' 
+	<Font name='Bold'
+	 size='8'
+	 face='Arial'
+	 bold='1'
 	 italic='0'
 	/>
 
-You might call this in a label element using something like this: - 
+You might call this in a label element using something like this: -
 
-	<label 
-	 text='some text' 
-	 font='$self->{Bold}' 
-	 ... 
+	<label
+	 text='some text'
+	 font='$self->{Bold}'
+	 ...
 	/>.
 
 =item <Class>
 
 You can create a <Class> element,
 
-	<Class name='MyClass' icon='$self->{MyIcon}'/> 
+	<Class name='MyClass' icon='$self->{MyIcon}'/>
 
 that can be applied to a <Window .. class='$self->{MyClass}'>. The name of a class must be unique
 over all instances of Win32::GUI::XMLBuilder instances!
@@ -503,7 +581,7 @@ sub _GenericNoParent {
 
 Creates a menu system. The amount of '>'s prefixing a text label specifies the menu items
 depth. A value of text '-' (includes '>-', '>>-', etc) creates a separator line. To access
-named menu items one must use the menu widgets name, i.e. $gui->{PopupMenu}->{SelectAll}, 
+named menu items one must use the menu widgets name, i.e. $gui->{PopupMenu}->{SelectAll},
 although one can access an event by its name, i.e. SelectAll_Click. One can also use NEM
 events directly as attributes such as onClick, etc..
 
@@ -585,8 +663,8 @@ the attribute 'eventmodel' to 'both' to allow <Window_Name>_Event events to be c
 
 =item <DialogBox>
 
-<DialogBox> is very similar to <Window>, except that by default it cannot be resized and it 
-doesn't have the minimize and maximize buttons. 
+<DialogBox> is very similar to <Window>, except that by default it cannot be resized and it
+doesn't have the minimize and maximize buttons.
 
 =item <MDIFrame>
 
@@ -595,45 +673,16 @@ to the <Window> attribute. PLease see the MDI.xml sample.
 
 =cut
 
-sub _GenericTop { 
+sub _GenericTop {
 	my ($self, $t, $e) = @_;
 	my $widget = $e->gi;
 	my $name = $self->genname($e); # should this be allowed?
 	my $show = $e->{'att'}->{'show'};
 
-	$self->{_context_} = $name;
-	
-	$self->{_resize_}{$name} = eval "{
-		package main; no strict;
-		sub {
-			foreach (\@{\$self->{_worder_}{$name}}) {
-				my \$width = eval \$self->{_width_}{$name}{\$_};
-				\$self->debug(\"\$_: Width to \$self->{_width_}{$name}{\$_} = \$width\");
-				\$self->{\$_}->Width(\$width) if \$_ ne '$name';
-			}
-			foreach (\@{\$self->{_horder_}{$name}}) {
-				my \$height = eval \$self->{_height_}{$name}{\$_};
-				\$self->debug(\"\$_: Height to \$self->{_height_}{$name}{\$_} = \$height\");
-				\$self->{\$_}->Height(\$height) if \$_ ne '$name';
-			}
-			
-			foreach (\@{\$self->{_lorder_}{$name}}) {
-				my \$left = eval \$self->{_left_}{$name}{\$_};
-				\$self->debug(\"\$_: Left to \$self->{_left_}{$name}{\$_} = \$left\"); 
-				\$self->{\$_}->Left(\$left) if \$_ ne '$name';
-			}
-			foreach (\@{\$self->{_torder_}{$name}}) {
-				my \$top = eval \$self->{_top_}{$name}{\$_};
-				\$self->debug(\"\$_: Top to \$self->{_top_}{$name}{\$_} = \$top\"); 
-				\$self->{\$_}->Top(\$top) if \$_ ne '$name';
-			}
-		}
-	}";	print STDERR $@ if $@;
-
-	$e->{'att'}->{'onResize'} = $self->{_resize_}{$name};
-
 	$self->debug("\n$widget (_GenericTop): $name");
 	$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
+	$self->{$name}->SetEvent('Resize', $self->genresize($name));
+	
 	${$self->{_show_}}{$name} = $show eq '' ? 1 : $show;
 
 	foreach ($e->children()) {
@@ -678,7 +727,7 @@ sub TreeView {
 sub TreeView_Item {
 	my ($self, $e, $parent) = @_;
 	my $name = $e->{'att'}->{'name'};
-	foreach my $item ($e->children()) { 
+	foreach my $item ($e->children()) {
 		next if $item->gi ne 'Item';
 		my $iname = $item->{'att'}->{'name'};
 		$self->debug("Item: $iname; Parent: $name");
@@ -705,14 +754,14 @@ sub Combobox {
 	my $parent = $self->getParent($e);
 
 	$self->debug("\nCombobox: $name; Parent: $parent");
-    
+
 	$e->{'att'}->{'pushstyle'} = 'exec:WS_VISIBLE|0x3|WS_VSCROLL|WS_TABSTOP' if $e->{'att'}->{'dropdown'};
-    
+
 	$self->{$name} = $self->{$parent}->AddCombobox($self->evalhash($e)) || $self->error;
 
 	my $default;
 	if($e->children_count()) {
-		foreach my $item ($e->children()) { 
+		foreach my $item ($e->children()) {
 			next if $item->gi ne 'Item';
 			my $text = $item->{'att'}->{'text'};
 			$default = $text if $item->{'att'}->{'default'};
@@ -746,7 +795,7 @@ sub Listbox {
 
 	my $default;
 	if($e->children_count()) {
-		foreach my $item ($e->children()) { 
+		foreach my $item ($e->children()) {
 			next if $item->gi ne 'Item';
 			my $text = $item->{'att'}->{'text'};
 			$default = $text if $item->{'att'}->{'default'};
@@ -771,14 +820,12 @@ sub Rebar {
 
 	$self->debug("\nRebar: $name; Parent: $parent");
 	$self->{$name} = $self->{$parent}->AddRebar($self->evalhash($e)) || $self->error;
-	foreach my $item ($e->children()) { 
+	foreach my $item ($e->children()) {
 		my $bname = $self->genname($item);
 		$self->debug("Band: $bname");
 
-		my $bparent = $self->getParent($item);
-		
 		my $f;
-		$f->{'att'}->{'parent'} = $self->{$bparent};
+		$f->{'att'}->{'parent'} = $self->{$parent};
 		$f->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX';
 		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD';
 		# push non-Band attributes into Window class
@@ -790,18 +837,20 @@ sub Rebar {
 		$self->debug("Window: $bname");
 		$self->{$bname} = new Win32::GUI::Window($self->evalhash($f)) || $self->error;
 		$item->{'att'}->{'child'} = $self->{$bname};
+		
+		$self->{$bname}->SetEvent('Resize', $self->genresize($bname));
 
 		foreach ($item->children()) {
 			$self->debug($_->{'att'}->{'name'});
 			$self->debug($_->gi);
-		
+
 			if (exists &{$_->gi}) {
 				&{\&{$_->gi}}($self, $t, $_);
 			}	else {
 				$self->_Generic($t, $_);
 			}
 		}
-	
+
 		$self->{$name}->InsertBand($self->evalhash($item));
 	}
 }
@@ -822,7 +871,15 @@ A TabStrip can be created using the following structure: -
 
 See wizard_tabstrip.xml example in samples/ directory.
 
+=item <TabFrame>
+
+A TabFrame should behave identically to a TabStrip. TabFrame is no longer supported
+and will be removed from a future release. Please try to update your code to use
+TabStrip instead.
+
 =cut
+
+sub TabFrame { TabStrip(@_); }
 
 sub TabStrip {
 	my ($self, $t, $e) = @_;
@@ -835,18 +892,16 @@ sub TabStrip {
 			\$self->{\$self->{$name}->{\$i}}->Show(\$_[0]->SelectedItem == \$i ? 1 : 0);
 		}
 	}";
-	
+
 	$self->debug("\nTabStrip: $name; Parent: $parent");
 	$self->{$name} = $self->{$parent}->AddTabStrip($self->evalhash($e)) || $self->error;
 	my $tabcount = 0;
-	foreach my $item ($e->children()) { 
+	foreach my $item ($e->children()) {
 		my $bname = $self->genname($item);
 		$self->debug("Tab: $bname");
 
-		my $bparent = $self->getParent($item);
-
 		my $f;
-		$f->{'att'}->{'parent'} = $self->{$bparent};
+		$f->{'att'}->{'parent'} = $self->{$parent};
 		$f->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX|WS_EX_CONTROLPARENT';
 		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD|DS_CONTROL';
 		$f->{'att'}->{'pushstyle'} .= '|WS_VISIBLE' if $tabcount == 0;
@@ -869,12 +924,18 @@ sub TabStrip {
 
 		$self->debug("Window: $bname");
 		$self->{$bname} = new Win32::GUI::Window($self->evalhash($f)) || $self->error;
-		$item->{'att'}->{'child'} = $self->{$bname};
+		$self->{$bname}->SetEvent('Resize', $self->genresize($bname));
+		
+		$self->{_left_}{$parent}{$bname}   = "\$self->{$name}->Left + (\$self->{$name}->DisplayArea)[0]";
+		$self->{_top_}{$parent}{$bname}    = "\$self->{$name}->Top + (\$self->{$name}->DisplayArea)[1]";
+		$self->{_width_}{$parent}{$bname}  = "(\$self->{$name}->DisplayArea)[2]";
+		$self->{_height_}{$parent}{$bname} = "(\$self->{$name}->DisplayArea)[3]";
+		
+		push @{$self->{_worder_}{$parent}}, $bname;
+		push @{$self->{_horder_}{$parent}}, $bname;
+		push @{$self->{_lorder_}{$parent}}, $bname;
+		push @{$self->{_torder_}{$parent}}, $bname;
 
-		$self->{_left_}{$self->{_context_}}{$bname}   = "\$self->{$name}->Left + (\$self->{$name}->DisplayArea)[0]";
-		$self->{_top_}{$self->{_context_}}{$bname}    = "\$self->{$name}->Top + (\$self->{$name}->DisplayArea)[1]";
-		$self->{_width_}{$self->{_context_}}{$bname}  = "(\$self->{$name}->DisplayArea)[2]";
-		$self->{_height_}{$self->{_context_}}{$bname} = "(\$self->{$name}->DisplayArea)[3]";
 
 		$self->{$name}->{$tabcount} = $bname; # stash index to name mapping!
 
@@ -893,21 +954,12 @@ sub TabStrip {
 	}
 }
 
-=item <TabFrame>
 
-A TabFrame should behave identically to a TabStrip. TabFrame is no longer supported
-and will be removed from a future release. Please try to update your code to use 
-TabStrip instead.
+=item <WGXSplitter>
 
-=cut
+A WGXSplitter can be created using the following structure: -
 
-sub TabFrame { TabStrip(@_); }
-
-=item <SplitterPair>
-
-A SplitterPair can be created using the following structure: -
-
-	<SplitterPair ...>
+	<WGXSplitter ...>
 	 <Item name='P0' text='Zero'>
 	  <Label text='Tab 1' .... />
 	 </Item>
@@ -915,7 +967,7 @@ A SplitterPair can be created using the following structure: -
 	  <Label text='Tab 2' .... />
 	   ..other elements, etc...
 	 </Item>
-	</SplitterPair>
+	</WGXSplitter>
 
 The reason this is called a splitter pair is because it does not exist as a super-class
 to a Splitter object. It's width dimension for example holds the complete width of both
@@ -929,9 +981,9 @@ sub WGXSplitter {
 	my ($self, $t, $e) = @_;
 	my $name = $self->genname($e);
 	my $parent = $self->getParent($e);
-	
+
 	$e->{'att'} = $self->expandDimensions($e->{'att'});
-	
+
 	if (exists $e->{'att'}->{'range'}) {
 		if ($e->{'att'}->{'range'} =~ m/^\s*(.+)\s*,\s*(.+)\s*$/) {
 			($e->{'att'}->{'min'}, $e->{'att'}->{'max'}) = ($1, $2);
@@ -940,7 +992,7 @@ sub WGXSplitter {
 			$self->debug("Failed to parse range '$e->{'att'}->{'range'}', should have format '[min, max]'");
 		}
 	}
-	
+
 	my ($LEFT, $TOP, $WIDTH, $HEIGHT);
 	if($e->{'att'}->{'horizontal'}) {
 		$e->{'att'}->{'_notop_'} = 1;
@@ -956,7 +1008,6 @@ sub WGXSplitter {
 			\$self->{\$self->{$name}->{0}}->Resize(\$_[0]->Width, \$_[1] - $TOP);
 			\$self->{\$self->{$name}->{1}}->Move(\$_[0]->Left, \$_[1] + \$_[0]->Height);
 			\$self->{\$self->{$name}->{1}}->Resize(\$_[0]->Width, $HEIGHT - \$_[0]->Height - \$_[1] + $TOP);
-			&{\$self->{_resize_}{\$self->{_context_}}};
 		}";
 	} else {
 		$e->{'att'}->{'_noleft_'} = 1;
@@ -972,19 +1023,18 @@ sub WGXSplitter {
 			\$self->{\$self->{$name}->{0}}->Resize(\$_[1] - $LEFT, \$_[0]->Height);
 			\$self->{\$self->{$name}->{1}}->Move(\$_[1] + \$_[0]->Width, \$_[0]->Top);
 			\$self->{\$self->{$name}->{1}}->Resize($WIDTH - \$_[0]->Width - \$_[1] + $LEFT, \$_[0]->Height);
-			&{\$self->{_resize_}{\$self->{_context_}}};
 		}";
 	}
 
 	$self->debug("\WGXSplitter: $name; Parent: $parent");
 	$self->{$name} = $self->{$parent}->AddSplitter($self->evalhash($e)) || $self->error;
 	my $tabcount = 0;
-	foreach my $item ($e->children()) { 
+	foreach my $item ($e->children()) {
 		my $bname = $self->genname($item);
 		$self->debug("Pane: $bname");
 
 		my $f;
-		$f->{'att'}->{'parent'} = $self->{$self->{_context_}};
+		$f->{'att'}->{'parent'} = $self->{$parent};
 		$f->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX|WS_EX_CONTROLPARENT';
 		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD|DS_CONTROL|WS_VISIBLE';
 
@@ -995,25 +1045,25 @@ sub WGXSplitter {
 
 		$self->debug("Window: $bname");
 		$self->{$bname} = new Win32::GUI::Window($self->evalhash($f)) || $self->error;
-		$item->{'att'}->{'child'} = $self->{$bname};
-		
+		$self->{$bname}->SetEvent('Resize', $self->genresize($bname));
+
 		if($e->{'att'}->{'horizontal'}) {
-			$self->{_left_}{$self->{_context_}}{$bname}   = $tabcount == 0 ? "\$self->{$name}->Left" : "\$self->{$name}->Left";
-			$self->{_top_}{$self->{_context_}}{$bname}    = $tabcount == 0 ? "$TOP" : "\$self->{$name}->Top + \$self->{$name}->Height";
-			$self->{_width_}{$self->{_context_}}{$bname}  = $tabcount == 0 ? "\$self->{$name}->Width" : "\$self->{$name}->Width";
-			$self->{_height_}{$self->{_context_}}{$bname} = $tabcount == 0 ? "\$self->{$name}->Top - $TOP" : "$HEIGHT - \$self->{$name}->Top - \$self->{$name}->Height + $TOP";
+			$self->{_left_}{$parent}{$bname}   = $tabcount == 0 ? "\$self->{$name}->Left" : "\$self->{$name}->Left";
+			$self->{_top_}{$parent}{$bname}    = $tabcount == 0 ? "$TOP" : "\$self->{$name}->Top + \$self->{$name}->Height";
+			$self->{_width_}{$parent}{$bname}  = $tabcount == 0 ? "\$self->{$name}->Width" : "\$self->{$name}->Width";
+			$self->{_height_}{$parent}{$bname} = $tabcount == 0 ? "\$self->{$name}->Top - $TOP" : "$HEIGHT - \$self->{$name}->Top - \$self->{$name}->Height + $TOP";
 		} else {
-			$self->{_left_}{$self->{_context_}}{$bname}   = $tabcount == 0 ? "$LEFT" : "\$self->{$name}->Left + \$self->{$name}->Width";
-			$self->{_top_}{$self->{_context_}}{$bname}    = $tabcount == 0 ? "\$self->{$name}->Top" : "\$self->{$name}->Top";
-			$self->{_width_}{$self->{_context_}}{$bname}  = $tabcount == 0 ? "\$self->{$name}->Left - $LEFT" : "$WIDTH - \$self->{$name}->Width - \$self->{$name}->Left + $LEFT";
-			$self->{_height_}{$self->{_context_}}{$bname} = $tabcount == 0 ? "\$self->{$name}->Height" : "\$self->{$name}->Height";
+			$self->{_left_}{$parent}{$bname}   = $tabcount == 0 ? "$LEFT" : "\$self->{$name}->Left + \$self->{$name}->Width";
+			$self->{_top_}{$parent}{$bname}    = $tabcount == 0 ? "\$self->{$name}->Top" : "\$self->{$name}->Top";
+			$self->{_width_}{$parent}{$bname}  = $tabcount == 0 ? "\$self->{$name}->Left - $LEFT" : "$WIDTH - \$self->{$name}->Width - \$self->{$name}->Left + $LEFT";
+			$self->{_height_}{$parent}{$bname} = $tabcount == 0 ? "\$self->{$name}->Height" : "\$self->{$name}->Height";
 		}
-		
-		push @{$self->{_worder_}{$self->{_context_}}}, $bname;
-		push @{$self->{_horder_}{$self->{_context_}}}, $bname;
-		push @{$self->{_lorder_}{$self->{_context_}}}, $bname;
-		push @{$self->{_torder_}{$self->{_context_}}}, $bname;
-		
+
+		push @{$self->{_worder_}{$parent}}, $bname;
+		push @{$self->{_horder_}{$parent}}, $bname;
+		push @{$self->{_lorder_}{$parent}}, $bname;
+		push @{$self->{_torder_}{$parent}}, $bname;
+
 		$self->{$name}->{$tabcount} = $bname; # stash index to name mapping!
 
 		foreach ($item->children()) {
@@ -1032,11 +1082,11 @@ sub WGXSplitter {
 }
 
 =item <Timer>
-	
+
 Allows you to create a timer for use in your program.
 
-	<Timer name='start_thread	' 
-	 elapse='8' 
+	<Timer name='start_thread	'
+	 elapse='8'
 	/>
 
 =cut
@@ -1056,9 +1106,9 @@ sub Timer {
 Any widget not explicitly mentioned above can be generated by using its name
 as an element id. For example a Button widget can be created using: -
 
-	<Button name='B' 
-	 text='Push Me' 
-	 left='20' top='0' 
+	<Button name='B'
+	 text='Push Me'
+	 left='20' top='0'
 	 width='80' height='20'
 	/>
 
@@ -1071,7 +1121,7 @@ sub _Generic {
 	my $parent = $self->getParent($e);
 
 	$self->debug("\n$widget (_Generic): $name; Parent: $parent");
-	if ($widget =~ /^(Grid|DIBitmap|AxWindow|Scintilla|ScintillaPerl)$/) {
+	if ($widget =~ /^$qrLRWidgets/ || $widget =~ /^$qrTop/) {
 		$e->{'att'}->{'parent'} = "\$self->{$parent}";
 		$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
 	} else {

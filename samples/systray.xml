@@ -8,11 +8,11 @@
 		class='$self->{C}'
 		onTerminate='sub { $_[0]->PostQuitMessage(0); $self->{NI}->DESTROY; return 0; }'
 	>
-	<NotifyIcon name='NI'
-		id='1'
-		icon='$self->{I}'
-		tip='System Tray Example'
-		onClick='sub { $self->{W}->Enable; $self->{W}->Show; return 1; }'
-	/>
+		<NotifyIcon name='NI'
+			id='1'
+			icon='$self->{I}'
+			tip='System Tray Example'
+			onClick='sub { $self->{W}->Enable; $self->{W}->Show; return 1; }'
+		/>
 	</Window>
 </GUI>

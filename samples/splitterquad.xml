@@ -10,11 +10,8 @@
 			start='100'
 			range='0, 200'
 		>
-			<Item name='P1'>
-				<TreeView name='TV'
-					dim='0, 0, $self->{P1}->ScaleWidth, $self->{P1}->ScaleHeight'
-					lines='1' rootlines='1' buttons='1' visible='1'
-				>
+			<Item>
+				<TreeView lines='1' rootlines='1' buttons='1' visible='1'>
 					<Item name='TV_0' text='TV_0' selectedimage='1'>
 						<Item name='TV_0_0' text='TV_0_0'>
 							<Item name='TV_0_0_0' text='TV_0_0_0'/>
@@ -31,9 +28,8 @@
 					</Item>
 				</TreeView>
 			</Item>
-			<Item name='P2'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{P2}->ScaleWidth, $self->{P2}->ScaleHeight'
 					text='Panel 2' 
 					foreground='exec:[0,0,0]' background='exec:[0,255,0]'
 				/>
@@ -47,28 +43,19 @@
 			start='100'
 			range='0, 200'
 		>
-			<Item name='Q1'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{Q1}->ScaleWidth, $self->{Q1}->ScaleHeight'
 					text='Panel 3'
 					foreground='exec:[255,255,255]' background='exec:[0,0,255]'
 				/>
 			</Item>
 			<Item name='Q2'>
-				<TabStrip
-					dim='0, 0, $self->{Q2}->ScaleWidth, $self->{Q2}->ScaleHeight'
-				>
-					<Item name='TAB1' text='Zero'>
-						<Label
-							dim='0, 0, $self->{TAB1}->Width, $self->{TAB1}->Height'
-							text='This is tab zero!'
-						/>
+				<TabStrip>
+					<Item text='Zero'>
+						<Label text='This is tab zero!'/>
 					</Item>
-					<Item name='TAB2' text='One'>
-						<Label 
-							dim='0, 0, $self->{TAB2}->Width, $self->{TAB2}->Height'
-							text='This is tab one!' 
-						/>
+					<Item text='One'>
+						<Label text='This is tab one!'/>
 					</Item>
 				</TabStrip>
 			</Item>
@@ -81,16 +68,14 @@
 			start='100'
 			min='0'
 		>
-			<Item name='R1'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{R1}->ScaleWidth, $self->{R1}->ScaleHeight'
 					text='Panel 1'
 					foreground='exec:[255,255,255]' background='exec:[255,0,0]'
 				/>
 			</Item>
 			<Item name='R2'>
 				<Label 
-					dim='0, 0, $self->{R2}->ScaleWidth, $self->{R2}->ScaleHeight'
 					text='Panel 2' 
 					foreground='exec:[0,0,0]' background='exec:[0,255,0]'
 				/>
@@ -104,17 +89,14 @@
 			start='100'
 			min='0'
 		>
-			<Item name='S1'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{S1}->ScaleWidth, $self->{S1}->ScaleHeight'
 					text='Panel 3'
 					foreground='exec:[255,255,255]' background='exec:[0,0,255]'
 				/>
 			</Item>
-			<Item name='S2'>
-				<Listbox
-					dim='0, 0, $self->{S2}->ScaleWidth, $self->{S2}->ScaleHeight'
-				>
+			<Item>
+				<Listbox>
 					<Item text='Item 1'/>
 					<Item text='Item 2'/>
 					<Item text='Item 3'/>

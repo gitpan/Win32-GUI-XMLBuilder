@@ -21,7 +21,6 @@
 		menu='$self->{Menu}'
 	>
 		<MDIClient name='Client'
-			dim='0, 0, $self->{Window}->ScaleWidth, $self->{Window}->ScaleHeight'
 			firstchild='100'
 			windowmenu='$self->{Menu}->{Window}->{-handle}'
 		/>

@@ -4,21 +4,19 @@
 	>
 
 		<WGXSplitter
-			dim='0, 0, $self->{W}->ScaleWidth, $self->{W}->ScaleHeight/2'
+			dim='0, 0, $self->{W}->ScaleWidth, 150'
 			horizontal='0'
 			splittersize='4'
 			start='200'
 		>
-			<Item name='P1'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{P1}->ScaleWidth, $self->{P1}->ScaleHeight'
 					text='Panel 1'
 					foreground='exec:[255,255,255]' background='exec:[255,0,0]'
 				/>
 			</Item>
-			<Item name='P2'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{P2}->ScaleWidth, $self->{P2}->ScaleHeight'
 					text='Panel 2' 
 					foreground='exec:[0,0,0]' background='exec:[0,255,0]'
 				/>
@@ -26,21 +24,19 @@
 		</WGXSplitter>
 
 		<WGXSplitter
-			dim='0, $self->{W}->ScaleHeight/2, $self->{W}->ScaleWidth, $self->{W}->ScaleHeight/2'
+			dim='0, 150, $self->{W}->ScaleWidth, $self->{W}->ScaleHeight - 150'
 			horizontal='1'
 			splittersize='4'
 			start='75'
 		>
-			<Item name='Q1'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{Q1}->ScaleWidth, $self->{Q1}->ScaleHeight'
 					text='Panel 3'
 					foreground='exec:[255,255,255]' background='exec:[0,0,255]'
 				/>
 			</Item>
-			<Item name='Q2'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{Q2}->ScaleWidth, $self->{Q2}->ScaleHeight'
 					text='Panel 4'
 					foreground='exec:[0,0,0]' background='exec:[255,255,0]'
 				/>

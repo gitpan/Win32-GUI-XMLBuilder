@@ -29,7 +29,6 @@
 			<Item bitmap='node_sel.bmp'/>
 		</ImageList>
 		<TreeView name='TV'
-			dim='0, 0, $self->{Window}->ScaleWidth, $self->{Window}->ScaleHeight'
 			text='hello world!'
 			lines='1'
 			rootlines='1'

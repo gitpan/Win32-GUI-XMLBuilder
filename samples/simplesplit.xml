@@ -9,16 +9,14 @@
 			start='75'
 			min='0'
 		>
-			<Item name='P1'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{P1}->ScaleWidth, $self->{P1}->ScaleHeight'
 					text='Panel 1'
 					foreground='exec:[255,255,255]' background='exec:[255,0,0]'
 				/>
 			</Item>
-			<Item name='P2'>
+			<Item>
 				<Label 
-					dim='0, 0, $self->{P2}->ScaleWidth, $self->{P2}->ScaleHeight'
 					text='Panel 2' 
 					foreground='exec:[0,0,0]' background='exec:[0,255,0]'
 				/>
