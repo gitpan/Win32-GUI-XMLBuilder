@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     'NAME'         => 'Win32::GUI::XMLBuilder',
-    'VERSION_FROM' => 'XMLBuilder.pm',
+    'VERSION_FROM' => 'lib/Win32/GUI/XMLBuilder.pm',
      ($] ge '5.005')
      ? (
       'AUTHOR'   => 'Sutton Blair (blair@odey.com)',
