@@ -1,0 +1,174 @@
+<!--
+ This example is from an old Win32::GUI 0.655 sample and therefore hasn't had its
+ events converted to NEM.
+-->
+<GUI>
+	<Cursor name='Cursor' file='harrow.cur'/>
+	<Icon name='I' file='XMLBuilder.ico'/>
+	<Class name='C' icon='$self->{I}' cursor='$self->{Cursor}'/>
+	<Menu name='M'>
+		<Item name='Options' text='&amp;Options'/>
+		<Item name='Indent' text='>Set &amp;indent...'/>
+		<Item name='Font' text='>Choose &amp;font...'/>
+		<Item name='HasLines' text='>&amp;Lines' checked='1'/>
+		<Item name='HasRootLines' text='>&amp;Root lines' checked='1'/>
+		<Item name='HasButtons' text='>&amp;Buttons' checked='1'/>
+		<Item name='HasImages' text='>I&amp;mage' checked='1'/>
+		<Item text='>-'/>
+		<Item name='Exit' text='>E&amp;xit' onClick='sub { $self->{Window}->PostQuitMessage(0); }'/>
+	</Menu>
+	<Window name='Window' 
+		dim='100, 100, 300, 200'
+		text='Win32::GUI TEST - TreeView'
+		menu='$self->{M}'
+		class='$self->{C}'
+		onTerminate='sub { $_[0]->PostQuitMessage(0); }'
+	>
+		<ImageList name='IL' width='16' height='16' maxsize='10'>
+			<Item bitmap='node.bmp'/>
+			<Item bitmap='node_sel.bmp'/>
+		</ImageList>
+		<TreeView name='TV'
+			dim='0, 0, $self->{Window}->ScaleWidth, $self->{Window}->ScaleHeight'
+			text='hello world!'
+			lines='1'
+			rootlines='1'
+			buttons='1'
+			visible='1'
+			imagelist='$self->{IL}'
+			onNodeClick='sub { my %N = $_[0]->GetItem($_[1]); print "Clicked node $N{-text} (checkbox is ".($_[0]->ItemCheck($_[1]) ? "on" : "off").")\n"; return 1; }'
+		>
+			<Item name='TV1' text='ROOT' image='0' selectedimage='1'>
+				<Item name='TV2' text='SUB 2' image='0' selectedimage='1' bold='1'/>
+				<Item name='TV3' text='SUB 1' image='0' selectedimage='1' selected='1'/>
+			</Item>
+		</TreeView>
+	</Window>
+	<Window name='IndentWin'
+		dim='110, 110, 200, 100'
+		text='Treeview Indent'
+		show='0'
+	>
+		<Label name='IndentVal'
+			left='10' top='10'
+			text='exec:qq|Indent value = |.$self->{TV}->Indent'
+		/>
+		<Textfield name='IndentNew'
+			dim='10, 40, 100, 25'
+			text='exec:$self->{TV}->Indent'
+		/>
+		<Button name='IndentSet'
+			left='130' top='40'
+			text='Set'
+		/>
+	</Window>
+	<PostExec>
+	<![CDATA[
+	
+	my $dblclick = 0;
+	
+	sub TV_Expand {
+		my %node = $gui->{TV}->GetItem($_[0]);
+		print "Expanded node '$node{-text}'\n";
+		$dblclick = 1;
+		return 1;
+	}
+	
+	sub TV_Collapse {
+		my %node = $gui->{TV}->GetItem($_[0]);
+		print "Collapsed node '$node{-text}'\n";
+		$dblclick = 1;
+		return 1;
+	}
+	
+	sub TV_DblClick {
+		if(!$dblclick) {
+			my($x, $y) = Win32::GUI::GetCursorPos();
+			print "Double click at $x, $y\n";
+			my $node = $gui->{TV}->SelectedItem();
+			if($node) {
+				$gui->{TV}->ItemCheck($node, !$gui->{TV}->ItemCheck($node));
+				my %t = $gui->{TV}->getItem($node);
+				foreach my $k (keys %t) {
+					print "$k => $t{$k}\n";
+				}
+			}
+		} else {
+			print "got Collapse/Expand, ignoring DblClick\n";
+			$dblclick = 0;
+		}
+		return 1;
+	}
+	
+	sub Indent_Click {
+		$gui->{Window}->Disable();    
+		$gui->{IndentVal}->Text("Indent value = ".$gui->{TV}->Indent());
+		$gui->{IndentNew}->Text($gui->{TV}->Indent());
+		$gui->{IndentWin}->Show();
+		$gui->{IndentNew}->SetFocus();
+		$gui->{IndentNew}->Select(0, length($gui->{IndentNew}->Text()));
+		return 1;
+	}
+	
+	sub IndentSet_Click {
+		$gui->{TV}->Indent($gui->{IndentNew}->Text());
+		$gui->{IndentWin}->Hide();
+		$gui->{Window}->Enable();
+		$gui->{Window}->SetForegroundWindow();
+	}
+	
+	sub IndentWin_Terminate {
+		$gui->{IndentWin}->Hide();
+		$gui->{Window}->Enable();
+		$gui->{Window}->SetForegroundWindow();
+	}
+	
+	sub Font_Click {
+		$gui->{Window}->Disable();
+		my @font = GUI::ChooseFont();
+		if($font[0] eq "-name") {
+			undef $TreeviewFont;
+			$TreeviewFont = new GUI::Font(@font);
+			$gui->{TV}->SetFont($TreeviewFont);
+			# $gui->{TV}->Change(-font => $TreeviewFont);
+		}
+		$gui->{Window}->Enable();
+		$gui->{Window}->SetForegroundWindow();
+	}
+	
+	sub HasLines_Click {
+		my $checked = !$gui->{M}->{HasLines}->Checked;
+		printf "TV.Style is: %08X\n", $gui->{TV}->GetWindowLong(-16);
+		$gui->{TV}->Change(-lines => $checked);
+		printf "TV.Style after -lines => %d is: %08X\n", $checked, $gui->{TV}->GetWindowLong(-16);
+		$gui->{M}->{HasLines}->Checked($checked);
+	}
+	
+	sub HasRootLines_Click {
+		my $checked = !$gui->{M}->{HasRootLines}->Checked;
+		printf "TV.Style is: %08X\n", $gui->{TV}->GetWindowLong(-16);
+		$gui->{TV}->Change(-rootlines => $checked);
+		printf "TV.Style after -rootlines => %d is: %08X\n", $checked, $gui->{TV}->GetWindowLong(-16);
+		$gui->{M}->{HasRootLines}->Checked($checked);
+	}
+	
+	sub HasButtons_Click {
+		my $checked = !$gui->{M}->{HasButtons}->Checked;
+		printf "TV.Style is: %08X\n", $gui->{TV}->GetWindowLong(-16);
+		$gui->{TV}->Change(-buttons => $checked);
+		printf "TV.Style after -buttons => %d is: %08X\n", $checked, $gui->{TV}->GetWindowLong(-16);
+		$gui->{M}->{HasButtons}->Checked($checked);
+	}
+	
+	sub HasImages_Click {
+		if($gui->{M}->{HasImages}->Checked) {
+			$gui->{M}->{HasImages}->Checked(0);
+			$gui->{TV}->SetImageList(0);
+		} else {
+			$gui->{M}->{HasImages}->Checked(1);
+			$gui->{TV}->SetImageList($IL);
+		}
+	}
+	]]>
+	</PostExec>
+</GUI>

@@ -1,18 +1,21 @@
 use strict;
 
-use Win32::TieRegistry( Delimiter=>"|", ArrayValues=>0 );
+use Win32::TieRegistry(Delimiter=>"|", ArrayValues=>0);
 our $registry = &initRegistry();
 
 use Win32::GUI::XMLBuilder;
-&Win32::GUI::XMLBuilder::build(*DATA);
-&Win32::GUI::Dialog;
+$ENV{WIN32GUIXMLBUILDER_DEBUG} = 0;
+my $gui = Win32::GUI::XMLBuilder->new(*DATA);
+Win32::GUI::Dialog;
 
 sub W_Terminate {
-	$registry->{width}  = $GUI{W}->ScaleWidth;
-	$registry->{height} = $GUI{W}->ScaleHeight;
-	$registry->{left}   = $GUI{W}->Left;
-	$registry->{top}    = $GUI{W}->Top;
-	$GUI{W}->PostQuitMessage(0);
+	print STDERR "Saving registry...\n";
+	$registry->{width}  = $gui->{W}->ScaleWidth;
+	$registry->{height} = $gui->{W}->ScaleHeight;
+	$registry->{left}   = $gui->{W}->Left;
+	$registry->{top}    = $gui->{W}->Top;
+	print STDERR "$registry->{width} x $registry->{height} @ ($registry->{left}, $registry->{top})\n";
+	$gui->{W}->PostQuitMessage(0);
 	return -1;
 }
 
@@ -38,9 +41,17 @@ sub initRegistry {
 __END__
 <GUI>
 	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$GUI{I}'/>
-	<Window name='W' show='1' left='$::registry->{left}' top='$::registry->{top}' width='$::registry->{width}' height='$::registry->{height}' title='Persistent Registry Settings Example' class='C'>
-		<StatusBar name='S' text='Blair Sutton 2003' top='$GUI{W}->ScaleHeight-$GUI{S}->Height' left='0' width='$GUI{W}->ScaleWidth' height='$GUI{S}->Height'/>
+	<Class name='C' icon='$self->{I}'/>
+	<Window name='W'
+		dim='exec:$registry->{left}, exec:$registry->{top}, exec:$registry->{width}, exec:$registry->{height}'
+		title='Persistent Registry Settings Example'
+		class='$self->{C}'
+		eventmodel='both'
+	>
+		<StatusBar name='S'
+			dim='0, $self->{W}->ScaleHeight-$self->{S}->Height, $self->{W}->ScaleWidth, $self->{S}->Height'
+			text='exec:$Win32::GUI::XMLBuilder::AUTHOR'
+		/>
 	</Window>
 </GUI>
 

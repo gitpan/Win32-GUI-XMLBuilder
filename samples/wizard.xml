@@ -1,9 +1,3 @@
-use strict;
-use Win32::GUI::XMLBuilder;
-my $gui = Win32::GUI::XMLBuilder->new(*DATA);
-Win32::GUI::Dialog;
-
-__END__
 <GUI>
 	<Icon name='I' file='XMLBuilder.ico'/>
 	<Class name='C' icon='$self->{I}'/>
@@ -83,4 +77,3 @@ __END__
 		</TabFrame>
 	</Window>
 </GUI>
-

@@ -1,14 +1,23 @@
+#
+# buildfile.pl <xml file>
+#
+# build pure XMLBuilder xml files
+#
 use strict;
 use Win32::GUI::XMLBuilder;
-$ARGV[0] eq '' ? &Win32::GUI::XMLBuilder::build(*DATA) : &Win32::GUI::XMLBuilder::buildfile($ARGV[0]);
-&Win32::GUI::Dialog;
 
-sub _W_Terminate {
-	$GUI{_W}->PostQuitMessage(0);
-	return -1;
+my $_gui;
+our $gui;
+
+if ($ARGV[0] eq '') {
+	$_gui = Win32::GUI::XMLBuilder->new(*DATA);
+} else {
+	$gui = Win32::GUI::XMLBuilder->new({file=>$ARGV[0]});
 }
 
-sub _B_Click {
+Win32::GUI::Dialog;
+
+sub loadGUI {
 	my $f = GUI::GetOpenFileName(
 		-title     => 'Choose XML file...',
 		-directory => '.',
@@ -20,17 +29,36 @@ sub _B_Click {
 	);
 
 	if ($f ne '') {
-		&Win32::GUI::XMLBuilder::buildfile($f);
+		undef $gui;
+		$gui = Win32::GUI::XMLBuilder->new({file=>$f});
 	}
 }
 
 __END__
 <GUI>
-	<Icon name='_I' file='XMLBuilder.ico'/>
-	<Class name='_C' icon='$GUI{_I}' />
-	<Window name='_W' show='1' left='100' top='100' width='250' height='100' title='Buildfile Example' class='_C'>
-		<Label text='Usage: buildfile.pl &lt;xmlfile>...' left='20' top='10' width='$GUI{_W}->Width-50' height='$GUI{_W}->Height-50'/>
-		<Button name='_B' text='Open XML file...' left='20' top='$GUI{_W}->Height-70' width='100' height='20'/>
+	<Icon name='I' file='XMLBuilder.ico'/>
+	<Class name='__CLASS__' icon='$self->{I}' />
+	<Window
+		dim='100, 100, 250, 100'
+		title='Build XMLBuilder File'
+		class='$self->{__CLASS__}'
+		onTerminate='sub { $_[0]->PostQuitMessage(0); return -1; }'
+		show='1'
+	>
+		<Label
+			dim='20, 10, 220, 30'
+			text='CLI Usage: buildfile.pl &lt;xml file&gt;, or'
+			/>
+		<Button
+			dim='20, 30, 100, 20'
+			text='Open XML file...'
+			onClick='loadGUI'
+		/>
+		<Checkbox
+			dim='135, 30, 100, 20'
+			text='Debug'
+			onClick='sub { $ENV{WIN32GUIXMLBUILDER_DEBUG} = $_[0]->Checked; }'
+		/>
 	</Window>
 </GUI>
 

@@ -1,30 +1,34 @@
 <GUI>
 	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$GUI{I}'/>
+	<Class name='C' icon='$self->{I}'/>
 	<Menu name='M'>
-		<Item label='&amp;A' sub='A'/>
-		<Item label='>One'   sub='0'/>
-		<Item label='>Two'   sub='0'/>
-		<Item label='>Three' sub='0'/>
-		<Item label='>Four'  sub='0'/>
-		<Item label='>>A'  sub='0'/>
-		<Item label='>>B'  sub='0'/>
-		<Item label='>>C'  sub='0'/>
-		<Item label='>>>1'  sub='0'/>
-		<Item label='>>>2'  sub='0'/>
-		<Item label='>>>3'  sub='0'/>
-		<Item label='>-'     sub='0'/>
-		<Item label='>Five'  sub='0'/>
-		<Item label='>Six'   sub='0'/>
-		<Item label='&amp;B' sub='B'/>
-		<Item label='>One'   sub='0'/>
-		<Item label='>-'     sub='0'/>
-		<Item label='>Two'   sub='0'/>
-		<Item label='>Three' sub='0'/>
-		<Item label='>Four'  sub='0'/>
-		<Item label='>Five'  sub='0'/>
+		<Item name='A' text='&amp;A'/>
+		<Item text='>One'/>
+		<Item text='>Two'/>
+		<Item text='>Three'/>
+		<Item text='>Four'/>
+		<Item text='>>A'/>
+		<Item text='>>B'/>
+		<Item text='>>C'/>
+		<Item text='>>>1'/>
+		<Item text='>>>2'/>
+		<Item text='>>>3'/>
+		<Item text='>-'/>
+		<Item name='Five' text='>Five' checked='1' onClick='sub { $self->{M}->{Five}->Checked(not $self->{M}->{Five}->Checked); }'/>
+		<Item text='>Six'   />
+		<Item name='B' text='&amp;B'/>
+		<Item text='>One'/>
+		<Item text='>-'/>
+		<Item text='>Two'/>
+		<Item text='>Three'/>
+		<Item text='>Four'/>
+		<Item text='>Five'/>
 	</Menu>
-	<Window show='1' name='W' left='0' top='0' width='250' height='60' class='$GUI{C}' menu='$GUI{M}' title='Menus - example' style='WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW'>
-	</Window>
+	<Window
+		left='200' top='200' width='250' height='60'
+		class='$self->{C}'
+		menu='$self->{M}'
+		title='Menus - example'
+	/>
 </GUI>
 

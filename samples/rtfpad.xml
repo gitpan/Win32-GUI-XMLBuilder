@@ -1,70 +1,85 @@
 <GUI>
 	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$GUI{I}'/>
+	<Class name='C' icon='$self->{I}'/>
 	<Menu name='M'>
-		<Item label='&amp;File' sub='File'/>
-		<Item label='>New' sub='0'/>
-		<Item label='>Open...' sub='Open'/>
-		<Script>
-			sub ::Open_Click {
+		<Item name='File' text='&amp;File'/>
+		<Item text='>New'/>
+		<Item name='Open' text='>Open...'/>
+		<PreExec>
+		<![CDATA[
+			sub Open_Click {
 				my $f = GUI::GetOpenFileName(-title=>'Open...',-directory=>'.',-filter=>["Rich Text (*.rtf)"=>"*.rtf","All files","*.*"]);
-				$GUI{R}->Load($f) if -f $f;
+				$self->{R}->Load($f) if -f $f;
 			}
-		</Script>
-		<Item label='>Save' sub='0'/>
-		<Item label='>Save As...' sub='SaveAs'/>
-		<Script>
-			sub ::SaveAs_Click {
+		]]>
+		</PreExec>
+		<Item text='>Save'/>
+		<Item name='SaveAs' text='>Save As...'/>
+		<PreExec>
+		<![CDATA[
+			sub SaveAs_Click {
 				my $f = GUI::GetSaveFileName(-title=>'Save As...',-directory=>'.',-file=>"\0"." "x256,-filter=>["Rich Text (*.rtf)"=>"*.rtf","All files","*.*"]);
-				$GUI{R}->Save($f) if -f $f;
+				$gui->{R}->Save($f) if -f $f;
 			}
-		</Script>
-		<Item label='>-' sub='0'/>
-		<Item label='>Page Setup...' sub='0'/>
-		<Item label='>Print...' sub='0'/>
-		<Item label='>-' sub='0'/>
-		<Item label='>Exit' sub='Exit'/>
-		<Item label='&amp;Edit' sub='Edit'/>
-		<Item label='>Undo' sub='0'/>
-		<Item label='>-' sub='0'/>
-		<Item label='>Cut' sub='0'/>
-		<Item label='>Copy' sub='0'/>
-		<Item label='>Paste' sub='0'/>
-		<Item label='>Delete' sub='0'/>
-		<Item label='&amp;Format' sub='Format'/>
-		<Item label='>Font...' sub='Font'/>
-		<Script>
-			sub ::Font_Click {
+		]]>
+		</PreExec>
+		<Item text='>-'/>
+		<Item text='>Page Setup...'/>
+		<Item text='>Print...'/>
+		<Item text='>-'/>
+		<Item name='Exit' text='>Exit'/>
+		<Item name='Edit' text='&amp;Edit'/>
+		<Item text='>Undo'/>
+		<Item text='>-'/>
+		<Item text='>Cut'/>
+		<Item text='>Copy'/>
+		<Item text='>Paste'/>
+		<Item text='>Delete'/>
+		<Item name='Format' text='&amp;Format'/>
+		<Item name='Font' text='>Font...'/>
+		<PreExec>
+		<![CDATA[
+			sub Font_Click {
 				my @f = Win32::GUI::ChooseFont();
 				if ($#f > 0) {
 					my %f = @f;
 					delete $f{-size}; # ??
-					$GUI{F} = new Win32::GUI::Font(%f);
-					$GUI{R}->SetFont($GUI{F});
+					$gui->{F} = new Win32::GUI::Font(%f);
+					$gui->{R}->SetFont($self->{F});
 				}
 			}
-		</Script>
+		]]>
+		</PreExec>
 	</Menu>
-	<Window show='1' name='W' left='0' top='0' width='1024' height='768' class='$GUI{C}' menu='$GUI{M}' title='Untitled - RTFpad' style='WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW'>
-		<StatusBar name='S' text='RTFpad 0.1 - Blair Sutton 2003' top='$GUI{W}->ScaleHeight-$GUI{S}->Height' left='0' width='$GUI{W}->ScaleWidth' height='$GUI{S}->Height'/>
-		<RichEdit name='R' left='0' top='0' width='$GUI{W}->ScaleWidth' height='$GUI{W}->ScaleHeight-$GUI{S}->Height' style='WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_LEFT|ES_MULTILINE|ES_AUTOVSCROLL' exstyle='WS_EX_CLIENTEDGE' />
-		<Script>
-			sub ::R_RightClick { # broken because of bug in RichEdit 
+	<Window show='1' name='W' left='0' top='0' width='1024' height='768' class='$self->{C}' menu='$self->{M}' title='Untitled - RTFpad'>
+		<StatusBar name='S' text='RTFpad 0.1 - Blair Sutton 2003' top='$self->{W}->ScaleHeight-$self->{S}->Height' left='0' width='$self->{W}->ScaleWidth' height='$self->{S}->Height'/>
+		<RichEdit name='R'
+      left='0' top='0' width='$self->{W}->ScaleWidth' height='$self->{W}->ScaleHeight-$self->{S}->Height'
+      style='exec:WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_LEFT|ES_MULTILINE|ES_AUTOVSCROLL' exstyle='exec:WS_EX_CLIENTEDGE' 
+      onLostFocus='R_RClick'
+      onDblClick='R_RClick'
+    />
+		<PreExec>
+		<![CDATA[
+    	sub R_RClick { # broken because of bug in RichEdit 
 				my ($x, $y) = Win32::GUI::GetCursorPos();
-				$GUI{W}->TrackPopupMenu($GUI{P}->{PopupMenu}, $x, $y-50);
+				print "Clicked\n";
+				$gui->{W}->TrackPopupMenu($gui->{P}->{PopupMenu}, $x, $y-50);
 			}
-		</Script>
+		]]>
+		</PreExec>
 	</Window>
 	<Menu name='P'>
-		<Item label='PopupMenuFunctions' sub='PopupMenu'/>
-		<Item label='>Undo' sub='0'/>
-		<Item label='>-' sub='0'/>
-		<Item label='>Cut' sub='0'/>
-		<Item label='>Copy' sub='0'/>
-		<Item label='>Paste' sub='0'/>
-		<Item label='>Delete' sub='0'/>
-		<Item label='>-' sub='0'/>
-		<Item label='>Select All' sub='0'/>
+		<Item name='PopupMenu' text='PopupMenuFunctions'/>
+		<Item text='>Undo'/>
+		<Item text='>-'/>
+		<Item text='>Cut'/>
+		<Item text='>Copy'/>
+		<Item text='>Paste'/>
+		<Item text='>Delete'/>
+		<Item text='>-'/>
+		<Item text='>Select All'/>
 	</Menu>
+
 </GUI>
 

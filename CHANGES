@@ -1,0 +1,9 @@
+CHANGES
+
+0.21 -> 0.30
+Moved to OO framework. No longer fixed global variable %GUI.
+Added checkbox framework  to Menu Items.
+Added NEM events.
+Standardized MakeMenu Item elements.
+'show' attribute now defaults to '1'.
+lots more!
