@@ -1,5 +1,12 @@
 CHANGES
 
+0.32 -> 0.33
+Implemented TabStrip (TabFrame now deprecated, please update your progs!)
+Internal rewrite to allow for special new elements.
+ Builtin Resize/Move now use Width/Height/Left/Top.
+ Implement getParent to discover correct top-level widgets.
+Added WGXSplitter element.
+
 0.31 -> 0.32
 Fix print to STDERR in Rebar bug.
 Remove errors on insertItems subs.

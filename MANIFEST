@@ -16,6 +16,9 @@ samples/node.bmp
 samples/rebar.xml
 samples/registry.pl
 samples/rtfpad.xml
+samples/simplesplit.xml
+samples/splitter.xml
+samples/splitterquad.xml
 samples/systray.xml
 samples/timer.xml
 samples/treeview.pl
@@ -27,5 +30,3 @@ t/use.t
 TODO
 CHANGES
 lib/Win32/GUI/XMLBuilder.pm
-lib/Win32/GUI/TabFrame.pm
-lib/Win32/GUI/Frame.pm

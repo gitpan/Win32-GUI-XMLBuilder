@@ -17,7 +17,7 @@ __END__
 			dim='0, $self->{W}->ScaleHeight - $self->{S}->Height, $self->{W}->ScaleWidth, $self->{S}->Height'
 			text='exec:$Win32::GUI::XMLBuilder::AUTHOR'
 		/>
-		<TabFrame name='Form'
+		<TabStrip name='Form'
 			dim='0, 0, $self->{W}->ScaleWidth, $self->{W}->ScaleHeight - $self->{S}->Height'
 			onChanging='sub { return 0; }'
 		>
@@ -80,7 +80,7 @@ __END__
 					onClick='sub { $self->{W}->PostQuitMessage(0); return -1; }'
 				/>
 			</Item>
-		</TabFrame>
+		</TabStrip>
 	</Window>
 </GUI>
 
