@@ -1,4 +1,8 @@
-<GUI>
+<?xml version="1.0"?>
+<GUI
+xmlns="http://www.numeninest.com/Perl/WGX"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.numeninest.com/Perl/WGX http://www.numeninest.com/Perl/WGX/win32-gui-xmlbuilder.xsd">
 <AcceleratorTable name='A'>
 	<Item key='Control-X' sub='CX'/>
 	<Item key='Shift-A' sub='sub { $self->{L}->Text("Shift-A pressed"); }'/>

@@ -8,6 +8,7 @@ samples/harrow.cur
 samples/hash2tree.pl
 samples/listbox.xml
 samples/MDI.xml
+samples/makemenu.xml
 samples/menus.xml
 samples/modal.xml
 samples/modal2.xml

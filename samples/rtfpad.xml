@@ -1,7 +1,11 @@
-<GUI>
+<?xml version="1.0"?>
+<GUI
+xmlns="http://www.numeninest.com/Perl/WGX"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.numeninest.com/Perl/WGX http://www.numeninest.com/Perl/WGX/win32-gui-xmlbuilder.xsd">
 	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON'/>
 	<Class name='RE' extends='RichEdit' widget='RichEdit'/>
-	<Menu name='M'>
+	<MakeMenu name='M'>
 		<Item name='File' text='&amp;File'/>
 		<Item text='>New'/>
 		<Item name='Open' text='>Open...'/>
@@ -44,7 +48,7 @@
 				}
 			}
 		]]></WGXPre>
-	</Menu>
+	</MakeMenu>
 	<Window name='W' dim='0, 0, 1024, 768' class='$self->{C}' menu='$self->{M}' title='Untitled - RTFpad'>
 		<StatusBar name='S' text='exec:$Win32::GUI::XMLBuilder::AUTHOR' 
 			top='exec:$self->{W}->ScaleHeight - $self->{S}->Height if defined $self->{S}'
@@ -65,7 +69,7 @@
 			}
 		]]></WGXPost>
 	</Window>
-	<Menu name='P'>
+	<MakeMenu name='P'>
 		<Item name='PopupMenu' text='PopupMenuFunctions'/>
 		<Item text='>Undo'/>
 		<Item text='>-'/>
@@ -75,6 +79,6 @@
 		<Item text='>Delete'/>
 		<Item text='>-'/>
 		<Item text='>Select All'/>
-	</Menu>
+	</MakeMenu>
 </GUI>
 

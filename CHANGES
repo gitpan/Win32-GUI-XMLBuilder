@@ -1,5 +1,13 @@
 CHANGES
 
+0.35 -> 0.36
+Remove unnecessary maxsize attribute from ImageList element.
+Fixed bug in systray.xml, NotifyIcon icon now shows.
+Menu replaced with MakeMenu.
+Non-Item children in MakeMenu elements are ignored.
+New element WGXMenu introduced.
+XML Schema for WGX introduced.
+
 0.34 -> 0.35
 Allow _Generic Widgets to have children.
  Thus top level widgets as children have children.

@@ -5,15 +5,20 @@
 #
 use strict;
 use Win32::GUI::XMLBuilder;
+use Cwd;
+use File::Basename;
 
 my $__FILE__;
 
-my $gui;
+our $gui;
 
-if ($ARGV[0] eq '') {
+if (! -f $ARGV[0]) {
 	Win32::GUI::XMLBuilder->new(*DATA);
 } else {
-	$gui = Win32::GUI::XMLBuilder->new({file=>$ARGV[0]});
+	$__FILE__ = basename($ARGV[0]);
+	my $__DIR__  = getcwd."/".dirname($ARGV[0]);
+	chdir($__DIR__) || die "chdir $__DIR__,$!\n";
+	$gui = Win32::GUI::XMLBuilder->new({file=>$__FILE__});
 }
 
 Win32::GUI::Dialog;
@@ -33,7 +38,7 @@ sub loadGUI {
 }
 
 sub reloadGUI {
-	if ($__FILE__ ne '') {
+	if (-f $__FILE__) {
 		foreach (%{$gui}) {
 			$gui->{$_}->DESTROY if ref $gui->{$_} eq 'Win32::GUI::Window';
 		}

@@ -4,7 +4,7 @@
 #
 # 14 Dec 2003 by Blair Sutton <bsdz@cpan.org>
 #
-# Version: 0.35 (4th July 2004)
+# Version: 0.36 (1st October 2004)
 #
 # Copyright (c) 2004 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.35;
+our $VERSION = 0.36;
 our @ISA     = qw(Exporter);
 
 our $AUTHOR = "Blair Sutton - 2004 - Win32::GUI::XMLBuilder - $VERSION";
@@ -273,7 +273,7 @@ it will assume a top and left of zero and and a width and height of its parent. 
 
 =cut
 
-my $qrTop = qr/(Window|DialogBox|MDIFrame)$/;
+my $qrTop = qr/(Window|DialogBox|MDIFrame|MDIClient|MDIChild)$/;
 my $qrFile = qr/(Icon|Bitmap|Cursor)$/;
 my $qrNoParent = qr/(Font|Class|Pen|Brush)$/;
 my $qrNoDim = qr/(NotifyIcon)$/;
@@ -435,6 +435,7 @@ sub new {
 	$self->{_lorder_}  = undef; # ...{parent} = (child1, child2, ...)
 	$self->{_top_}     = undef; # ...{parent}{child}
 	$self->{_torder_}  = undef; # ...{parent} = (child1, child2, ...)
+	$self->{_menuid_}  = 1; # menu id counter (see Win32/GUI.pm/MakeMenu)
 
 	bless($self, (ref($this) || $this));
 
@@ -458,8 +459,8 @@ sub new {
 	$t->parse($s->sprint);
 	my $root = $t->root; 
 	foreach ($root->children()) {
-		$self->debug($_->{'att'}->{'name'});
-		$self->debug($_->gi);
+		#$self->debug($_->{'att'}->{'name'});
+		#$self->debug($_->gi);
 		next if $_->gi eq 'WGXPost' or $_->gi eq 'PostExec';
 
 		if (exists &{$_->gi}) {
@@ -681,7 +682,85 @@ sub _GenericNoParent {
 	$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
 }
 
-=item <Menu>
+=item <WGXMenu>
+
+Creates a menu system. Submenus can be nested many times more deeply than using MakeMenu. Although
+one can use Item elements throughout the structure it is more readable to use the Button attribute
+when a new nest begins. I.e.
+
+	<WGXMenu>
+	 <Button>
+	  <Item/>
+	 </Button>
+	</WGXMenu>
+
+and
+
+	<WGXMenu>
+	 <Item>
+	  <Item/>
+	 </Item>
+	</WGXMenu>
+
+are equivalent but the former is more true to what is happening under the hood. One can generally pass
+a Button to TrackPopupMenu and a Button handle to MDIClient's windowmenu attribute.
+
+A separator line can be specified by setting the separator attribute to 1.
+
+One can also use NEM events directly as attributes such as onClick (or OEM events by using
+PopupMenu_Click), etc..
+
+	<WGXMenu name='Menu'>
+	 <Button name='PopupMenu' text='ContextMenu'>
+	  <Item name='OnEditCut' text='Cut' onClick='OnEditCut'/>
+	  <Item name='OnEditCopy' text='Copy' onClick='sub { ... do something ...}'/>
+	  <Item name='OnEditPaste' text='Paste'/>
+	  <Item separator='1'/>
+	  <Item name='SelectAll' text='>Select All'/>
+	 </Button>
+	</WGXMenu>
+
+See the menus.xml for an extensive example in the samples/ directory.
+
+=cut
+
+sub WGXMenu {
+	my ($self, $t, $e) = @_;
+	my $name = $self->genname($e);
+
+	$self->debug("\nWGXMenu: $name");
+	$self->{$name} = new Win32::GUI::Menu() || $self->error;
+	
+	foreach my $button ($e->children()) {
+		next if $button->gi !~ /^(Item|Button)$/; 
+		$self->WGXMenu_Button($button, $name);
+	}
+}
+
+sub WGXMenu_Button {
+	my ($self, $e, $parent) = @_;
+	my $name = $self->genname($e);
+	$e->{'att'}->{'id'} = $self->{_menuid_}++;
+	
+	$self->debug("\nWGXMenu_Button: $name");
+	$self->{$name} = $self->{$parent}->AddMenuButton($self->evalhash($e));
+	
+	foreach my $item ($e->children()) {
+		$item->{'att'}->{'id'} = $self->{_menuid_}++;
+		my $iname = $self->genname($item);
+		if ($item->gi eq 'Button' || $item->children_count()) {
+			$self->{'submenu'.$self->{_menuid_}} = new Win32::GUI::Menu();
+			my $bname = $self->WGXMenu_Button($item, 'submenu'.$self->{_menuid_});
+			$item->{'att'}->{'submenu'} = $self->{$bname};
+			$self->{$name}->AddMenuItem($self->evalhash($item));
+		} elsif ($item->gi eq 'Item') {
+			$self->{$iname} = $self->{$name}->AddMenuItem($self->evalhash($item));
+		}
+	}
+	return $name;
+}
+
+=item <MakeMenu>
 
 Creates a menu system. The amount of '>'s prefixing a text label specifies the menu items
 depth. A value of text '-' (includes '>-', '>>-', etc) creates a separator line. To access
@@ -689,7 +768,7 @@ named menu items one must use the menu widgets name, i.e. $gui->{PopupMenu}->{Se
 although one can access an event by its name, i.e. SelectAll_Click. One can also use NEM
 events directly as attributes such as onClick, etc..
 
-	<Menu name='PopupMenu'>
+	<MakeMenu name='PopupMenu'>
 	 <Item text='ContextMenu'/>
 	 <Item name='OnEditCut' text='>Cut'/>
 	 <Item name='OnEditCopy' text='>Copy'/>
@@ -698,19 +777,28 @@ events directly as attributes such as onClick, etc..
 	 <Item name='SelectAll' text='>Select All'/>
 	 <item text='>-' />
 	 <Item name='Mode' text='>Mode' checked='1'/>
-	</Menu>
+	</MakeMenu>
 
-See the menus.xml example in the samples/ directory.
+See the makemenu.xml example in the samples/ directory. The MakeMenu element suffers from
+the limitation of being only able to nest menus to 2 layers. This is inherent from the
+underlying Win32::GUI module. I would suggest using the more configurable WGXMenu above.
+
+The <MakeMenu> element was previously called <Menu>. The <Menu> tag is deprecated but remains
+only for backward compatibility and will be removed in a later release. Please try to update
+your code to use MakeMenu instead.
 
 =cut
 
-sub Menu {
+sub Menu { MakeMenu(@_) }
+
+sub MakeMenu {
 	my ($self, $t, $e) = @_;
 	my $name = $self->genname($e);
 
 	$self->debug("\nMenu: $name");
 	my @m;
 	foreach ($e->children()) {
+		next if $_->gi ne 'Item';
 		$_->{'att'}->{'name'} = '0' if ! exists $_->{'att'}->{'name'};
 		my $label = $_->{'att'}->{'text'};
 		$self->debug("Text: $label");
@@ -1073,7 +1161,7 @@ A WGXSplitter can be created using the following structure: -
 	 </Item>
 	</WGXSplitter>
 
-The reason this is called a splitter pair is because it does not exist as a super-class
+The reason this is called a WGXSplitter is because it does not exist as a super-class
 to a Splitter object. It's width dimension for example holds the complete width of both
 panes and its splitterwidth ...
 

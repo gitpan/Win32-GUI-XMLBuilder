@@ -1,4 +1,8 @@
-<GUI>
+<?xml version="1.0"?>
+<GUI
+xmlns="http://www.numeninest.com/Perl/WGX"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.numeninest.com/Perl/WGX http://www.numeninest.com/Perl/WGX/win32-gui-xmlbuilder.xsd">
 	<Window name='W'
 		dim='100, 100, 400, 400'
 	>
@@ -49,7 +53,7 @@
 					foreground='exec:[255,255,255]' background='exec:[0,0,255]'
 				/>
 			</Item>
-			<Item name='Q2'>
+			<Item>
 				<TabStrip>
 					<Item text='Zero'>
 						<Label text='This is tab zero!'/>
@@ -74,7 +78,7 @@
 					foreground='exec:[255,255,255]' background='exec:[255,0,0]'
 				/>
 			</Item>
-			<Item name='R2'>
+			<Item>
 				<Label 
 					text='Panel 2' 
 					foreground='exec:[0,0,0]' background='exec:[0,255,0]'

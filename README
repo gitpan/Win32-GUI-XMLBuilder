@@ -18,8 +18,14 @@ DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-   Win32::GUI
-   XML::Twig
+   Win32::GUI 6.71 or higher
+   XML::Twig 3.14 or higher
+
+Latest versions of Win32::GUI are currently difficult to come
+by except via the CVS source tree. You can get a zipped
+distribution of 6.82 from here: -
+
+http://www.numeninest.com/Perl/WGX/Win32-GUI-0.0.682.zip
 
 INSTRUCTIONS
 
