@@ -1,0 +1,70 @@
+<GUI>
+	<Icon name='I' file='XMLBuilder.ico'/>
+	<Class name='C' icon='$GUI{I}'/>
+	<Menu name='M'>
+		<Item label='&amp;File' sub='File'/>
+		<Item label='>New' sub='0'/>
+		<Item label='>Open...' sub='Open'/>
+		<Script>
+			sub ::Open_Click {
+				my $f = GUI::GetOpenFileName(-title=>'Open...',-directory=>'.',-filter=>["Rich Text (*.rtf)"=>"*.rtf","All files","*.*"]);
+				$GUI{R}->Load($f) if -f $f;
+			}
+		</Script>
+		<Item label='>Save' sub='0'/>
+		<Item label='>Save As...' sub='SaveAs'/>
+		<Script>
+			sub ::SaveAs_Click {
+				my $f = GUI::GetSaveFileName(-title=>'Save As...',-directory=>'.',-file=>"\0"." "x256,-filter=>["Rich Text (*.rtf)"=>"*.rtf","All files","*.*"]);
+				$GUI{R}->Save($f) if -f $f;
+			}
+		</Script>
+		<Item label='>-' sub='0'/>
+		<Item label='>Page Setup...' sub='0'/>
+		<Item label='>Print...' sub='0'/>
+		<Item label='>-' sub='0'/>
+		<Item label='>Exit' sub='Exit'/>
+		<Item label='&amp;Edit' sub='Edit'/>
+		<Item label='>Undo' sub='0'/>
+		<Item label='>-' sub='0'/>
+		<Item label='>Cut' sub='0'/>
+		<Item label='>Copy' sub='0'/>
+		<Item label='>Paste' sub='0'/>
+		<Item label='>Delete' sub='0'/>
+		<Item label='&amp;Format' sub='Format'/>
+		<Item label='>Font...' sub='Font'/>
+		<Script>
+			sub ::Font_Click {
+				my @f = Win32::GUI::ChooseFont();
+				if ($#f > 0) {
+					my %f = @f;
+					delete $f{-size}; # ??
+					$GUI{F} = new Win32::GUI::Font(%f);
+					$GUI{R}->SetFont($GUI{F});
+				}
+			}
+		</Script>
+	</Menu>
+	<Window show='1' name='W' left='0' top='0' width='1024' height='768' class='$GUI{C}' menu='$GUI{M}' title='Untitled - RTFpad' style='WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW'>
+		<StatusBar name='S' text='RTFpad 0.1 - Blair Sutton 2003' top='$GUI{W}->ScaleHeight-$GUI{S}->Height' left='0' width='$GUI{W}->ScaleWidth' height='$GUI{S}->Height'/>
+		<RichEdit name='R' left='0' top='0' width='$GUI{W}->ScaleWidth' height='$GUI{W}->ScaleHeight-$GUI{S}->Height' style='WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_LEFT|ES_MULTILINE|ES_AUTOVSCROLL' exstyle='WS_EX_CLIENTEDGE' />
+		<Script>
+			sub ::R_RightClick { # broken because of bug in RichEdit 
+				my ($x, $y) = Win32::GUI::GetCursorPos();
+				$GUI{W}->TrackPopupMenu($GUI{P}->{PopupMenu}, $x, $y-50);
+			}
+		</Script>
+	</Window>
+	<Menu name='P'>
+		<Item label='PopupMenuFunctions' sub='PopupMenu'/>
+		<Item label='>Undo' sub='0'/>
+		<Item label='>-' sub='0'/>
+		<Item label='>Cut' sub='0'/>
+		<Item label='>Copy' sub='0'/>
+		<Item label='>Paste' sub='0'/>
+		<Item label='>Delete' sub='0'/>
+		<Item label='>-' sub='0'/>
+		<Item label='>Select All' sub='0'/>
+	</Menu>
+</GUI>
+

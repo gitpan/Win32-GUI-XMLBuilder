@@ -1,0 +1,21 @@
+<GUI>
+	<Window name='W1' show='1' left='100' top='100' width='400' height='150' title='Window 1'>
+		<Label text='Window 1' left='50' top='50' width='$GUI{W1}->Width-50' height='$GUI{W1}->Height-50'/>
+		<Button name='B' text='Open modal window...' left='20' top='$GUI{W1}->Height-70' width='150' height='20'/>
+	</Window>
+	<Window name='W2' show='0' left='100' top='400' width='400' height='150' title='Window 2' parent='$GUI{W1}'>
+		<Label text='Window 2' left='50' top='50' width='$GUI{W1}->Width-50' height='$GUI{W1}->Height-50'/>
+	</Window>
+	<Script>
+		sub ::B_Click {
+			$GUI{W1}->Disable();
+			$GUI{W2}->Show();
+		}
+		sub ::W2_Terminate {
+			$GUI{W2}->Hide();
+			$GUI{W1}->Enable();
+			$GUI{W1}->BringWindowToTop();
+			return 0;
+		}
+	</Script>
+</GUI>

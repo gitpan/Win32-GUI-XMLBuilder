@@ -1,0 +1,4 @@
+* - default size to Parent's size (?)
+* - allow use of another variable name other than %GUI
+* - documentation
+* - more examples
