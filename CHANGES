@@ -1,5 +1,11 @@
 CHANGES
 
+0.30 -> 0.31
+Support DialogBox, MDI, Timer, Accelerator widgets/objects.
+Fixed bug in _Generic constructors parent attribute (also fixes systray.xml example).
+Complete support for most widgets except those listed in TODO.
+Rebar - push non-Band attributes into child Window class (now can have colored bands!)
+
 0.21 -> 0.30
 Moved to OO framework. No longer fixed global variable %GUI.
 Added checkbox framework  to Menu Items.

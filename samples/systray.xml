@@ -1,18 +1,17 @@
 <GUI>
 	<Icon name='I' file='XMLBuilder.ico'/>
+	<Class name='C' icon='$self->{I}'/>
 	<Window name='W'
 		dim='100, 100, 400, 150'
 		title='System Tray Example'
 		onMinimize='sub { $_[0]->Disable; $_[0]->Hide; return 1; }'
+		class='$self->{C}'
 	>
-		<Label text='System Tray Example'
-			dim='50, 50, $self->{W}->Width-50, $self->{W}->Height-50'
-		/>
-		<NotifyIcon
-			id='1'
-			icon='$self->{I}'
-			tip='System Tray Example'
-			onClick='sub { $self->{W}-Enable; $self->{W}->Show; return 1; }'
-		/>
+	<NotifyIcon name='NI'
+		id='1'
+		icon='$self->{I}'
+		tip='System Tray Example'
+		onClick='sub { $self->{W}->Enable; $self->{W}->Show; return 1; }'
+	/>
 	</Window>
 </GUI>

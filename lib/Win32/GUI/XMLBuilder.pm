@@ -4,7 +4,7 @@
 #
 # 14 Dec 2003 by Blair Sutton <b.sutton@odey.com>
 #
-# Version: 0.30 (6th June 2004)
+# Version: 0.31 (13th June 2004)
 #
 # Copyright (c) 2004 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.30;
+our $VERSION = 0.31;
 our @ISA     = qw(Exporter);
 
 our $AUTHOR = "Blair Sutton - 2004 - Win32::GUI::XMLBuilder - $VERSION";
@@ -134,27 +134,6 @@ NEM event is called. One can alo specify other named subroutines by name, but do
 
 =cut
 
-# from GUI_Options.cpp, Window.xs, TabStrip.xs, TreeView.xs
-#
-my @_EVENTS_ = qw(
- MouseMove MouseOver MouseOut MouseDown MouseUp MouseDblClick MouseRightDown MouseRightUp MouseRightDblClick MouseMiddleDown MouseMiddleUp MouseMiddleDblClick
- KeyDown KeyUp
- Timer
- Paint
- Click RightClick DblClick DblRightClick
- GotFocus LostFocus
- DropFiles
- Char
- Deactivate Activate Terminate Minimize Maximize Resize Scroll InitMenu Paint
- Changing Change
- NodeClick Collapse Expand Collapsing Expanding BeginLabelEdit EndLabelEdit KeyDown
-);
-
-my %_EVENTS_;
-foreach (@_EVENTS_) {
-	$_EVENTS_{'on'.$_} = 1;
-}
-
 sub evalhash {
 	my ($self, $e) = @_;
 	#my $parent = $e->parent()->{'att'}->{'name'};
@@ -190,7 +169,7 @@ sub evalhash {
 	}
 	
 	foreach my $k (sort keys %in) {
-		if (exists $_EVENTS_{$k}) {
+		if ($k =~ /^on[A-Z]/) {
 			$out{-notify} = 1;
 			if ($in{$k} =~ /^\s*sub\s*\{.*\}\s*/) {
 				$out{-$k} = eval "{ package main; no strict; use Win32::GUI; ".$in{$k}."}"; print STDERR $@ if $@;
@@ -301,14 +280,19 @@ sub new {
 
 	my $t = new XML::Twig( 
 		TwigHandlers => { 
-			Icon      => sub { $self->_GenericFile(@_) },
-			Bitmap    => sub { $self->_GenericFile(@_) },
-			Cursor    => sub { $self->_GenericFile(@_) },
-			ImageList => sub { $self->ImageList(@_) },
-			Font      => sub { $self->Font(@_) },
-			Class     => sub { $self->Class(@_) },
-			Menu      => sub { $self->Menu(@_) },
-			Window    => sub { $self->Window(@_) }, 
+			Window           => sub { $self->_GenericTop(@_) },
+			DialogBox        => sub { $self->_GenericTop(@_) },
+			MDIFrame         => sub { $self->_GenericTop(@_) },
+			Icon             => sub { $self->_GenericFile(@_) },
+			Bitmap           => sub { $self->_GenericFile(@_) },
+			Cursor           => sub { $self->_GenericFile(@_) },
+			Font             => sub { $self->_GenericNoParent(@_) }, 
+			Class            => sub { $self->_GenericNoParent(@_) },
+			Pen              => sub { $self->_GenericNoParent(@_) },
+			Brush            => sub { $self->_GenericNoParent(@_) },
+			ImageList        => sub { $self->ImageList(@_) },
+			Menu             => sub { $self->Menu(@_) },
+			AcceleratorTable => sub { $self->AcceleratorTable(@_) },
 		}
 	);
 
@@ -463,16 +447,6 @@ You might call this in a label element using something like this: -
 	 ... 
 	/>.
 
-=cut
-
-sub Font {
-	my ($self, $t, $e) = @_;
-	my $name = $self->genname($e);
-
-	$self->debug("\nFont: $name");
-	$self->{$name} = new Win32::GUI::Font($self->evalhash($e)) || $self->error;
-}
-
 =item <Class>
 
 You can create a <Class> element,
@@ -484,12 +458,13 @@ over all instances of Win32::GUI::XMLBuilder instances!
 
 =cut
 
-sub Class {
+sub _GenericNoParent {
 	my ($self, $t, $e) = @_;
+	my $widget = $e->gi;
 	my $name = $self->genname($e);
 
-	$self->debug("\nClass: $name");
-	$self->{$name} = new Win32::GUI::Class($self->evalhash($e)) || $self->error;
+	$self->debug("\n$widget (_GenericNoParent): $name");
+	$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
 }
 
 =item <Menu>
@@ -502,7 +477,7 @@ events directly as attributes such as onClick, etc..
 
 	<Menu name='PopupMenu'>
 	 <Item text='ContextMenu'/>
-	 <Item  name='OnEditCut' text='>Cut'/>
+	 <Item name='OnEditCut' text='>Cut'/>
 	 <Item name='OnEditCopy' text='>Copy'/>
 	 <Item name='OnEditPaste' text='>Paste'/>
 	 <item text='>-' />
@@ -519,17 +494,51 @@ sub Menu {
 	my ($self, $t, $e) = @_;
 	my $name = $self->genname($e);
 
+	$self->debug("\nMenu: $name");
 	my @m;
 	foreach ($e->children()) {
 		$_->{'att'}->{'name'} = '0' if ! exists $_->{'att'}->{'name'};
 		my $label = $_->{'att'}->{'text'};
-		$self->debug("$label:");
+		$self->debug("Text: $label");
 		delete $_->{'att'}->{'text'}; # prevents preformated text becoming label
 		push @m, $label, { $self->evalhash($_) };
 	}
-	$self->debug("\nMenu: $name");
 	$self->{$name} = Win32::GUI::MakeMenu(@m) || $self->error;
 }
+
+=item <AcceleratorTable>
+
+Creates a key accelerator table.
+
+	<AcceleratorTable name='Accel'>
+	 <Item key='Ctrl-X' sub='Close'/>
+	 <Item key='Shift-N' sub='New'/>
+	 <Item key='Ctrl-Alt-Del' sub='Reboot'/>
+	 <Item key='Shift-A' sub='sub { print "Hello\n"; }'/>
+	</AcceleratorTable>
+
+=cut
+
+sub AcceleratorTable {
+	my ($self, $t, $e) = @_;
+	my $name = $self->genname($e);
+
+	$self->debug("\nAcceleratorTable: $name");
+	my @a;
+	foreach ($e->children()) {
+		my $key = $_->{'att'}->{'key'};
+		my $sub = $_->{'att'}->{'sub'};
+		if ($sub =~ /^\s*sub\s*\{.*\}\s*/) {
+			$sub = eval "{ package main; no strict; use Win32::GUI; ".$sub."}"; print STDERR $@ if $@;
+		} else {
+			$sub = \&{'::'.$sub};
+		}
+		$self->debug("$key -> $sub");
+		push @a, $key, $sub;
+	}
+	$self->{$name} = new Win32::GUI::AcceleratorTable(@a) || $self->error;
+}
+
 
 =item <Window>
 
@@ -542,10 +551,21 @@ to give the window a Show(n) command on invocation.
 NOTE: Since the onResize event is defined automatically for the this element one must set
 the attribute 'eventmodel' to 'both' to allow <Window_Name>_Event events to be caught!
 
+=item <DialogBox>
+
+<DialogBox> is very similar to <Window>, except that by default it cannot be resized and it 
+doesn't have the minimize and maximize buttons. 
+
+=item <MDIFrame>
+
+The <MDIFrame> element creates a Multiple Document Interface. It has a similar behaviour
+to the <Window> attribute. PLease see the MDI.xml sample.
+
 =cut
 
-sub Window { 
+sub _GenericTop { 
 	my ($self, $t, $e) = @_;
+	my $widget = $e->gi;
 	my $name = $self->genname($e); # should this be allowed?
 	my $show = $e->{'att'}->{'show'};
 
@@ -565,12 +585,11 @@ sub Window {
 		}
 	}";	print STDERR $@ if $@;
 
-	$self->debug("\nWindow: $name");
-	$self->{$name} = new Win32::GUI::Window($self->evalhash($e)) || $self->error;
+	$self->debug("\n$widget (_GenericTop): $name");
+	$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
 	${$self->{_show_}}{$name} = $show eq '' ? 1 : $show;
 
 	foreach ($e->children()) {
-		$self->debug($_->{'att'}->{'name'});
 		if (exists &{$_->gi}) {
 			&{\&{$_->gi}}($self, $t, $_);
 		}	else {
@@ -758,29 +777,55 @@ sub Rebar {
 		my $bname = $self->genname($item);
 		$self->debug("Band: $bname");
 
-		if ($item->children) {
-			$e->{'att'}->{'parent'} = $self->{$self->{_context_}};
-			$e->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX';
-			$e->{'att'}->{'pushstyle'} = 'exec:WS_CHILD';
-			$self->debug("Window: $bname");
-			$self->{$bname} = new Win32::GUI::Window($self->evalhash($e)) || $self->error;
-			$item->{'att'}->{'child'} = $self->{$bname};
-		}
-
-		foreach ($item->children()) {
-			$self->debug($_->{'att'}->{'name'});
-			$self->debug($_->gi);
-		
-			if (exists &{$_->gi}) {
-				&{\&{$_->gi}}($self, $t, $_);
-			}	else {
-				$self->_Generic($t, $_);
+		my $f;
+		$f->{'att'}->{'parent'} = $self->{$self->{_context_}};
+		$f->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX';
+		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD';
+		# push non-Band attributes into Window class
+		foreach (keys %{$item->{'att'}}) {
+			print "###$_ -> $item->{'att'}->{$_}\n";
+			if ($_ !~ /^(image|index|bitmap|child|foreground|background|width|minwidth|minheight|text|style)$/) {
+				$f->{'att'}->{$_} = $item->{'att'}->{$_};
 			}
 		}
+		$self->debug("Window: $bname");
+		$self->{$bname} = new Win32::GUI::Window($self->evalhash($f)) || $self->error;
+		$item->{'att'}->{'child'} = $self->{$bname};
 
-		$self->{$name}->InsertBand($self->evalhash($item));
 
+	foreach ($item->children()) {
+		$self->debug($_->{'att'}->{'name'});
+		$self->debug($_->gi);
+	
+		if (exists &{$_->gi}) {
+			&{\&{$_->gi}}($self, $t, $_);
+		}	else {
+			$self->_Generic($t, $_);
+		}
 	}
+
+	$self->{$name}->InsertBand($self->evalhash($item));
+	}
+}
+
+=item <Timer>
+	
+Allows you to create a timer for use in your program.
+
+	<Timer name='start_thread	' 
+	 elapse='8' 
+	/>
+
+=cut
+
+sub Timer {
+	my ($self, $t, $e) = @_;
+	my $name = $self->genname($e);
+	my $parent = $e->parent()->{'att'}->{'name'};
+	my $elapse = $e->{'att'}->{'elapse'};
+
+	$self->debug("\nTimer: $name, $elapse, ($parent)");
+	$self->{$name} = new Win32::GUI::Timer($self->{$parent}, $name, $elapse) || $self->error;
 }
 
 =item Generic Elements
@@ -803,8 +848,7 @@ sub _Generic {
 	my $parent = $e->parent()->{'att'}->{'name'};
 
 	$self->debug("\n$widget (_Generic): $name; Parent: $parent");
-	$e->{'att'}->{'parent'} = "\$self->{$parent}";
-	$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))"  || $self->error;
+	$self->{$name} = eval "new Win32::GUI::$widget(\$self->{$parent}, \$self->evalhash(\$e))"  || $self->error;
 }
 
 1;

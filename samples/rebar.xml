@@ -1,10 +1,15 @@
 <GUI>
 	<Icon name='I' file='XMLBuilder.ico'/>
 	<Class name='C' icon='$self->{I}'/>
-	<Window name='W' dim='100, 100, 600, 150' title='rebar - Example' class='$self->{C}'>
+	<DialogBox name='W' dim='100, 100, 600, 150' title='rebar - Example' class='$self->{C}'>
 		<Rebar bandborders='1'>
-			<Band text='One'/>
-			<Band width='210' minwidth='210' minheight='20'>
+			<Band text='One'
+				foreground='exec:[255,255,255]' background='exec:[255,0,0]'
+			/>
+			<Band text='Two'
+				width='210' minwidth='210' minheight='20'
+				foreground='exec:[255,255,255]' background='exec:[0,255,0]'
+			>
 				<Combobox dim='0, 0, 100, 80' dropdown='1'>
 					<Item text='Item 1'/>
 					<Item text='Item 2'/>
@@ -17,11 +22,14 @@
 					<Item text='Green'/>
 				</Combobox>
 			</Band>
-			<Band width='250' minwidth='250' minheight='20'>
+			<Band text='Three'
+				width='250' minwidth='250' minheight='20'
+				foreground='exec:[255,255,255]' background='exec:[0,0,255]'
+			>
 				<DateTime dim='0, 0, 130, 20'/>
 				<Button text='Button1' dim='135, 0, 50, 20'/>
 				<Button text='Button2' dim='195, 0, 50, 20'/>
 			</Band>
 		</Rebar>
-	</Window>
+	</DialogBox>
 </GUI>

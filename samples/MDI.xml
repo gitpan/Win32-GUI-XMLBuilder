@@ -1,0 +1,51 @@
+<!-- taken from Win32::GUI samples -->
+<GUI>
+	<Menu name='Menu'>
+		<Item name='File' text='&amp;File'/>
+		<Item text='>&amp;New' onClick='NewChild'/>
+		<Item text='>-'/>
+		<Item text='>E&amp;xit' onClick='sub { -1; }'/>
+		<Item name='Window' text='&amp;Window'/>
+		<Item text='>&amp;Next' onClick='sub { $self->{Client}->Next; }'/>
+		<Item text='>&amp;Previous' onClick='sub { $self->{Client}->Previous; }'/>
+		<Item text='>-'/>
+		<Item text='>&amp;Cascade' onClick='sub { $self->{Client}->Cascade(); 0; }'/>
+		<Item text='>Tile &amp;Horizontally' onClick='sub { $self->{Client}->Tile(1);  }'/>
+		<Item text='>Tile &amp;Vertically' onClick='sub { $self->{Client}->Tile(0);  }'/>
+		<Item name='Help' text='&amp;Help'/>
+		<Item text='>&amp;About'/>
+	</Menu>
+	<MDIFrame name='Window'
+		dim='100, 100, 280, 280'
+		title='Win32::GUI MDI Sample'
+		menu='$self->{Menu}'
+	>
+		<MDIClient name='Client'
+			dim='0, 0, $self->{Window}->ScaleWidth, $self->{Window}->ScaleHeight'
+			firstchild='100'
+			windowmenu='$self->{Menu}->{Window}->{-handle}'
+		/>
+	</MDIFrame>
+	<PreExec>
+	<![CDATA[
+	my $ChildCount = 0;
+	sub NewChild {
+		my $Child = $self->{Client}->AddMDIChild (
+			-name         => "Child".$ChildCount++,
+			-onActivate   => sub { print "Activate\n"; },
+			-onDeactivate => sub { print "Deactivate\n"; },
+			-onTerminate  => sub { print "Terminate\n";},
+			-onResize => sub { $_[0]->{Edit}->Resize($_[0]->Width, $_[0]->Height) if exists $_[0]->{Edit} }, 
+		) or die "Child";
+		$Child->AddTextfield (
+			-name => "Edit",
+			-multiline => 1,
+			-pos => [0,0],
+			-size => [100,100],      
+		);
+		$Child->{Edit}->Resize($Child->Width, $Child->Height) if exists $Child->{Edit};
+	}
+
+	]]>
+	</PreExec>
+</GUI>
