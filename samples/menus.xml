@@ -1,0 +1,30 @@
+<GUI>
+	<Icon name='I' file='XMLBuilder.ico'/>
+	<Class name='C' icon='$GUI{I}'/>
+	<Menu name='M'>
+		<Item label='&amp;A' sub='A'/>
+		<Item label='>One'   sub='0'/>
+		<Item label='>Two'   sub='0'/>
+		<Item label='>Three' sub='0'/>
+		<Item label='>Four'  sub='0'/>
+		<Item label='>>A'  sub='0'/>
+		<Item label='>>B'  sub='0'/>
+		<Item label='>>C'  sub='0'/>
+		<Item label='>>>1'  sub='0'/>
+		<Item label='>>>2'  sub='0'/>
+		<Item label='>>>3'  sub='0'/>
+		<Item label='>-'     sub='0'/>
+		<Item label='>Five'  sub='0'/>
+		<Item label='>Six'   sub='0'/>
+		<Item label='&amp;B' sub='B'/>
+		<Item label='>One'   sub='0'/>
+		<Item label='>-'     sub='0'/>
+		<Item label='>Two'   sub='0'/>
+		<Item label='>Three' sub='0'/>
+		<Item label='>Four'  sub='0'/>
+		<Item label='>Five'  sub='0'/>
+	</Menu>
+	<Window show='1' name='W' left='0' top='0' width='250' height='60' class='$GUI{C}' menu='$GUI{M}' title='Menus - example' style='WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW'>
+	</Window>
+</GUI>
+

@@ -1,0 +1,27 @@
+<GUI>
+	<Icon name='I' file='XMLBuilder.ico'/>
+	<Class name='C' icon='$GUI{I}'/>
+	<Window name='W' show='1' left='100' top='100' width='600' height='150' title='Window 1' class='$GUI{C}'>
+		<Rebar bandborders='1'>
+			<Band text='One' />
+			<Band width='210' minwidth='210' minheight='20'>
+				<Combobox name='D1' left='0' top='0' width='100' height='80' dropdown='1'>
+					<Item text='Item 1'/>
+					<Item text='Item 2'/>
+					<Item text='Item 3'/>
+					<Item text='Item 4' default='1'/>
+				</Combobox>
+				<Combobox name='D2' left='105' top='0' width='100' height='80' dropdown='1'>
+					<Item text='Red' default='1'/>
+					<Item text='Blue'/>
+					<Item text='Green'/>
+				</Combobox>
+			</Band>
+			<Band width='250' minwidth='250' minheight='20'>
+				<DateTime left='0' top='0' width='130' height='20'/>
+				<Button text='Button1' left='135' right='0' width='50' height='20' />
+				<Button text='Button2' left='195' right='0' width='50' height='20' />
+			</Band>
+		</Rebar>
+	</Window>
+</GUI>
