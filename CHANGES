@@ -1,5 +1,14 @@
 CHANGES
 
+0.36 -> 0.37
+New element WGXPanel.
+Inrtuction of substitution variable %P%.
+fix seperator typo in menus.xml sample.
+added wgxpanel_wizard.xml example.
+fixed separator typo in Schema.
+added aplication_template.xml sample.
+rewrite of hash2tree.pl sample.
+
 0.35 -> 0.36
 Remove unnecessary maxsize attribute from ImageList element.
 Fixed bug in systray.xml, NotifyIcon icon now shows.

@@ -3,6 +3,7 @@ MANIFEST			This list of files
 META.yml
 README
 samples/accelerator.xml
+samples/application_template.xml
 samples/buildfile.pl
 samples/harrow.cur
 samples/hash2tree.pl
@@ -25,6 +26,7 @@ samples/systray.xml
 samples/timer.xml
 samples/treeview.pl
 samples/tv.xml
+samples/wgxpanel_wizard.xml
 samples/wizard.xml
 samples/wizard.pl
 t/use.t

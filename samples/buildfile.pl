@@ -28,7 +28,8 @@ sub loadGUI {
 		-title     => 'Choose XML file...',
 		-directory => '.',
 		-filter    => [ 
-			"XMLBuilder (*.xml)" => "*.xml", 
+			"XML (*.xml)" => "*.xml",
+			"XMLBuilder (*.wgx)" => "*.wgx",
 			"All files", 
 			"*.*",	
 		],

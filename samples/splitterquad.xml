@@ -6,7 +6,6 @@ xsi:schemaLocation="http://www.numeninest.com/Perl/WGX http://www.numeninest.com
 	<Window name='W'
 		dim='100, 100, 400, 400'
 	>
-
 		<WGXSplitter
 			dim='0, 0, 200, 200'
 			horizontal='0'

@@ -4,7 +4,7 @@
 #
 # 14 Dec 2003 by Blair Sutton <bsdz@cpan.org>
 #
-# Version: 0.36 (1st October 2004)
+# Version: 0.37 (9th October 2004)
 #
 # Copyright (c) 2004 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.36;
+our $VERSION = 0.37;
 our @ISA     = qw(Exporter);
 
 our $AUTHOR = "Blair Sutton - 2004 - Win32::GUI::XMLBuilder - $VERSION";
@@ -93,21 +93,21 @@ XMLBuilder - Build Win32::GUIs using XML.
 =head1 SYNOPSIS
 
 	use Win32::GUI::XMLBuilder;
-
+	
 	my $gui = Win32::GUI::XMLBuilder->new({file=>"file.xml"});
 	my $gui = Win32::GUI::XMLBuilder->new(*DATA);
-
+	
 	Win32::GUI::Dialog;
-
+	
 	sub test {
 	 $gui->{Status}->Text("testing 1 2 3..");
 	}
-
+	
 	...
-
+	
 	__END__
 	<GUI>
-
+	
 	..
 	</GUI>
 
@@ -173,6 +173,12 @@ when one wants to create dynamically sizing windows: -
 	 />
 	</Window>
 
+=head1 SPECIAL SUBSTITUTION VARIABLES
+
+If an attribute contains the string %P% then it is subsituted with $self->{<parent>}. Where
+<parent> is the name of the current elements parent. It is useful when specifying child
+dimensions where the parent is nameless.
+
 =head1 SPECIFYING DIMENSIONS
 
 'pos' and 'size' attributes are supported but converted to top, left, height and width
@@ -182,36 +188,36 @@ attributes on parsing. I suggest using the attribute dim='left,top,width,height'
 =cut
 
 sub expandDimensions {
-	my ($self, $H) = @_;
+	my ($self, $e) = @_;
 
-	if (exists $$H{pos}) {
-		if ($$H{pos} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
-			($$H{top}, $$H{left}) = ($1, $2);
-			delete $$H{pos};
+	if (exists $e->{'att'}->{'pos'}) {
+		if ($e->{'att'}->{'pos'} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
+			($e->{'att'}->{'top'}, $e->{'att'}->{'left'}) = ($1, $2);
+			delete $e->{'att'}->{'pos'};
 		} else {
-			$self->debug("Failed to parse pos '$$H{pos}', should have format '[top, left]'");
+			$self->debug("Failed to parse pos '$e->{att}->{pos}', should have format '[top, left]'");
 		}
 	}
 
-	if (exists $$H{size}) {
-		if ($$H{size} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
-			($$H{width}, $$H{height}) = ($1, $2);
-			delete $$H{size};
+	if (exists $e->{'att'}->{'size'}) {
+		if ($e->{'att'}->{'size'} =~ m/^\[\s*(.+)\s*,\s*(.+)\s*\]$/) {
+			($e->{'att'}->{'width'}, $e->{'att'}->{'height'}) = ($1, $2);
+			delete $e->{'att'}->{'size'};
 		} else {
-			$self->debug("Failed to parse size '$$H{size}', should have format '[width, height]'");
+			$self->debug("Failed to parse size '$e->{att}->{size}', should have format '[width, height]'");
 		}
 	}
 
-	if (exists $$H{dim}) {
-		if ($$H{dim} =~ m/^\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*$/) {
-			($$H{left}, $$H{top}, $$H{width}, $$H{height}) = ($1, $2, $3, $4);
-			delete $$H{dim};
+	if (exists $e->{'att'}->{'dim'}) {
+		if ($e->{'att'}->{'dim'} =~ m/^\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*$/) {
+			($e->{'att'}->{'left'}, $e->{'att'}->{'top'}, $e->{'att'}->{'width'}, $e->{'att'}->{'height'}) = ($1, $2, $3, $4);
+			delete $e->{'att'}->{'dim'};
 		} else {
-			$self->debug("Failed to parse dim '$$H{dim}', should have format 'left, top, width, height'");
+			$self->debug("Failed to parse dim '$e->{att}->{dim}', should have format 'left, top, width, height'");
 		}
 	}
 
-	return $H;
+	return $e;
 }
 
 =head1 AUTO-RESIZING
@@ -282,10 +288,14 @@ my $qrLRWidgets = qr/(Grid|DIBitmap|AxWindow|Scintilla|ScintillaPerl)$/;
 sub evalhash {
 	my ($self, $e) = @_;
 
-	my %in = %{$self->expandDimensions($e->{'att'})};
+	$e = $self->expandDimensions($e);
+	my %in = %{$e->{'att'}};
 	my %out;
-
+	
+	my $parent = $self->getParent($e);
+	
 	foreach my $k (sort keys %in) {
+		$in{$k} =~ s/%P%/\$self->{$parent}/g; # sub %P% for parent
 		if ($k =~ /^on[A-Z]/) {
 			$out{-notify} = 1;
 			if ($in{$k} =~ /^\s*sub\s*\{.*\}\s*/s) {
@@ -303,7 +313,6 @@ sub evalhash {
 		$self->debug("\t-$k : $in{$k} -> $out{-$k}");
 	}
 
-	my $parent = $self->getParent($e);
 	if (defined $parent) {
 
 		if (!$in{_nowidth_}) {
@@ -886,6 +895,46 @@ sub _GenericTop {
 	}
 }
 
+=item <WGXPanel>
+
+A WGXPanel is a shorthand for a Window element with popstyles WS_CAPTION, WS_SIZEBOX and WS_EX_CONTROLPARENT
+and pushstyles WS_CHILD, DS_CONTROL and WS_VISIBLE. It is useful for grouping controls together.
+
+	<WGXPanel ...>
+	 ...
+	</WGXPanel>
+
+=cut
+
+sub WGXPanel {
+	my ($self, $t, $e) = @_;
+	my $name = $self->genname($e);
+	my $parent = $self->getParent($e);
+	my $show = $e->{'att'}->{'show'};
+
+	$self->debug("\nWGXPanel: $name; Parent: $parent");
+
+	$e->{'att'}->{'parent'} = $self->{$parent};
+	$e->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX|WS_EX_CONTROLPARENT';
+	$e->{'att'}->{'pushstyle'} = 'exec:WS_CHILD|DS_CONTROL|WS_VISIBLE';
+
+	$self->debug("\nWGXPanel: $name");
+	$self->{$name} = eval "new Win32::GUI::Window(\$self->evalhash(\$e))" || $self->error;
+	$self->{$name}->SetEvent('Resize', $self->genresize($name));
+	
+	${$self->{_show_}}{$name} = $show eq '' ? 1 : $show;
+
+	foreach ($e->children()) {
+		if (exists &{$_->gi}) {
+			&{\&{$_->gi}}($self, $t, $_);
+		}	else {
+			$self->_Generic($t, $_);
+		}
+	}
+
+}
+
+
 =item <TreeView>
 
 Creates a TreeView. These can be nested deeply using the sub element <Item>. Please look at the
@@ -1174,7 +1223,7 @@ sub WGXSplitter {
 	my $name = $self->genname($e);
 	my $parent = $self->getParent($e);
 
-	$e->{'att'} = $self->expandDimensions($e->{'att'});
+	$e = $self->expandDimensions($e);
 
 	if (exists $e->{'att'}->{'range'}) {
 		if ($e->{'att'}->{'range'} =~ m/^\s*(.+)\s*,\s*(.+)\s*$/) {

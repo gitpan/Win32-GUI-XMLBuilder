@@ -2,27 +2,23 @@
 # demonstrates how to create a treeview from a hash
 #
 use strict;
+use Data::Dumper;
 
 our %R; # this variable must be global to Win32::GUI::XMLBuilder!
 use Win32::TieRegistry(Delimiter=>"|", ArrayValues=>0, TiedHash=>\%R);
 
 use Win32::GUI::XMLBuilder;
-$ENV{WIN32GUIXMLBUILDER_DEBUG} = 0;
-my $gui = Win32::GUI::XMLBuilder->new(*DATA);
+Win32::GUI::XMLBuilder->new(*DATA);
 Win32::GUI::Dialog;
 
 sub hashwalk {
-	my ($href, $n) = @_;
-	my $o;
+	my ($T, $node, $HR, $n) = @_;
 	$n == 0 ? return : $n--;
-	foreach my $key (keys %$href) {
-		$key =~ s/\|//;
-    (my $txt  = $key) =~ s/(?:'|"|&|<|>)//;
-		$o .= ref($$href{$key}) ne "SCALAR" ? 
-			"<Item name='$txt' text='$txt'>".&hashwalk($$href{$key}, $n)."</Item>" :
-			"<Item name='$txt' text='$txt'/>" ; 
+	foreach my $k (keys %$HR) {
+		my $newnode = $T->InsertItem(-parent => $node, -text=>$k);
+		&hashwalk($T, $newnode, $$HR{$k}, $n) if ref($$HR{$k}) ne  '';
+		Win32::GUI::DoEvents();
 	}
-	return $o;
 }
 
 __END__
@@ -34,16 +30,17 @@ __END__
 		class='$self->{C}'
 	>
 		<StatusBar name='S'
-			top='exec:$self->{W}->ScaleHeight - $self->{S}->Height if defined $self->{S}'
-			height='exec:$self->{S}->Height if defined $self->{S}'
+			top='$self->{W}->ScaleHeight - $self->{S}->Height if defined $self->{S}'
+			height='$self->{S}->Height if defined $self->{S}'
 			text='exec:$Win32::GUI::XMLBuilder::AUTHOR'
 		/>
-		<TreeView
+		<TreeView name='T'
 			height='$self->{W}->ScaleHeight - $self->{S}->Height'
 			lines='1' rootlines='1' buttons='1' visible='1'
-		>
-			<WGXPre>return hashwalk(\%R, 2)</WGXPre>
-		</TreeView>
+		/>
 	</Window>
+	<WGXPost>
+		hashwalk($self->{T}, 0, \%R, 2)
+	</WGXPost>
 </GUI>
 
