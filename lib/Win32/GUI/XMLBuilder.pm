@@ -4,7 +4,7 @@
 #
 # 14 Dec 2003 by Blair Sutton <bsdz@cpan.org>
 #
-# Version: 0.34 (27th June 2004)
+# Version: 0.35 (4th July 2004)
 #
 # Copyright (c) 2004 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,13 +16,75 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.34;
+our $VERSION = 0.35;
 our @ISA     = qw(Exporter);
 
 our $AUTHOR = "Blair Sutton - 2004 - Win32::GUI::XMLBuilder - $VERSION";
 
 use XML::Twig;
 use Win32::GUI;
+
+use Win32::GUI::BitmapInline ();
+our $ICON = newIcon Win32::GUI::BitmapInline( q(
+AAABAAEAICAAAAEAGACoDAAAFgAAACgAAAAgAAAAQAAAAAEAGAAAAAAAAAAAAEgAAABIAAAAAAAA
+AAAAAAD/////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////cyfzJrfvcyfzcyfzJrfv////////////cyfzJ
+rfvcyfz////////////JrfvJrfvcyfz/////////////////////////////////////////////
+//////////+UW/ZeCfJeCfJeCfJwJfNeCfL////t5P6CQPVeCfJeCfJeCfJwJfPt5P7///9eCfJe
+CfKUW/b////////////////////////////////////////////////////t5P5eCfJeCfKCQPVw
+JfNeCfJeCfL///+md/heCfJeCfKUW/ZeCfJeCfKmd/j///9eCfJeCfKUW/b/////////////////
+///////////////////////////////////JrfteCfJeCfLJrfuUW/ZeCfJeCfL///+UW/ZeCfJe
+CfL///9eCfJeCfKUW/b///9eCfJeCfKUW/b/////////////////////////////////////////
+///////////JrfteCfJeCfLJrfuCQPVeCfJeCfL///+UW/ZeCfJeCfL///9eCfJeCfKUW/b///9e
+CfJeCfKUW/b////////////////////////////////////////////////////JrfteCfJeCfLJ
+rfteCfJeCfJeCfL///+UW/ZeCfJeCfL///9eCfJeCfKUW/b///9eCfJeCfKUW/b/////////////
+///////////////////////////////////////JrfteCfJeCfLJrfvJrfvJrfvJrfv///+UW/Ze
+CfJeCfL///9eCfJeCfKUW/b///9eCfJeCfKUW/b/////////////////////////////////////
+///////////////JrfteCfJeCfLJrfu4kvmUW/aUW/b///+UW/ZeCfJeCfL///9eCfJeCfKUW/b/
+//9eCfJeCfKUW/b////////////////////////////////////////////////////JrfteCfJe
+CfLJrfuUW/ZeCfJeCfL///+UW/ZeCfJeCfL///9eCfJeCfKUW/b///9eCfJeCfKUW/b/////////
+///////////////////////////////////////////JrfteCfJeCfKmd/iCQPVeCfJwJfP///+U
+W/ZeCfJeCfL///9eCfJeCfKUW/b///9eCfJeCfKUW/b/////////////////////////////////
+//////////////////////9wJfNeCfJeCfJeCfJeCfLJrfv///+UW/ZeCfJeCfL///9eCfJeCfKU
+W/b///9eCfJeCfKUW/b/////////////////////////////////////////////////////////
+//+4kvmUW/aUW/bcyfz///////+4kvmUW/aUW/b///+UW/aUW/a4kvn///+UW/aUW/a4kvn/////
+///////////HyceOko7///////////+Oko7Hycf///////+Oko7///+Oko7///////+Oko7////H
+ycdVW1Vyd3Lj5OPHycdVW1VVW1VVW1WOko7///////////////////////////9yd3I5QDn/////
+//////85QDlyd3L///////9VW1X///9VW1X///////9VW1XHycdVW1X////j5ONVW1X///9yd3Lj
+5OP///////////////////////////////////85QDmOko6qrar///+qraqOko5VW1X///////9V
+W1X///9VW1X///////9VW1X///////////////9VW1X///////9yd3Lj5OP/////////////////
+///////////j5ONVW1Xj5ONVW1X///9yd3Lj5ONVW1Xj5OP///9VW1X///9VW1X///////9VW1X/
+///////HyceOko5VW1X///////////9yd3Lj5OP///////////////////////+qraqqrar///9V
+W1X///9VW1X///+qraqqrar///9VW1X///8ACQCOko6Oko5yd3L////////Hycdyd3Kqrar/////
+///////j5ONyd3L///////////////////////9VW1X///////+Oko6Oko6Oko7///////9VW1X/
+///Hycf////HycfHyceqrar////Hyceqrar///////9VW1XHycfHycf////j5ONVW1X/////////
+//////////////9VW1X////////j5OMdJR3j5OP///////9VW1X///+Oko7/////////////////
+//////9VW1VVW1U5QDnj5OP///9VW1VVW1U5QDnj5OP////////////////////6WmT+5Ob/////
+///////////////7dn/8rLL////6WmT9ycz////////6WmT7kZj////////6WmT9ycz////9ycz6
+WmT6WmT6WmT6WmT6WmT6WmT////////////////6WmT4IzH+5Ob////////////7kZj3Bxf+5Ob/
+///5Pkv6WmT////////3Bxf3Bxf+5Ob////6WmT6WmT////+5Ob3Bxf5Pkv6WmT6WmT6WmT6WmT9
+ycz////////////////6WmT4IzH+5Ob////+5Ob4IzH7kZj////////7dn/5Pkv////////3Bxf3
+Bxf7dn/////7dn/5Pkv////////3Bxf7kZj////////////////////////////////////////6
+WmT4IzH+5Ob7dn/4IzH////////////8rLL3Bxf////8rLL3Bxf8rLL3Bxf+5Ob8rLL3Bxf/////
+///6WmT6WmT////////////////////////////////////////////6WmT4IzH3Bxf8rLL/////
+///////+5Ob3Bxf9ycz8rLL3Bxf////4IzH7dn/+5Ob3Bxf9ycz////7dn/4IzH/////////////
+///////////////////////////////////4IzH3Bxf+5Ob////////////////4IzH7kZj8rLL3
+Bxf////7kZj3Bxf+5Ob4IzH7kZj////8rLL3Bxf/////////////////////////////////////
+///////8rLL3Bxf6WmT4IzH+5Ob////////////6WmT6WmT7dn/5Pkv////////4IzH7dn/6WmT6
+WmT////+5Ob3Bxf8rLL////////////////////////////////////////4IzH7dn/////6WmT4
+IzH+5Ob////////7kZj4IzH6WmT6WmT////////7kZj3Bxf7dn/4IzH////////3Bxf7kZj/////
+///////////////////////////////7kZj4IzH+5Ob////////6WmT4IzH+5Ob////8rLL3Bxf5
+Pkv6WmT////////////4IzH5Pkv3Bxf////////6WmT6WmT/////////////////////////////
+///+5Ob3Bxf7kZj////////////////6WmT4IzH+5Ob////3Bxf3Bxf7kZj////////////7kZj3
+Bxf3Bxf8rLL////7dn/4IzH////////////////////////////////+5Ob8rLL/////////////
+///////////8rLL9ycz////8rLL8rLL+5Ob////////////////8rLL8rLL+5Ob////+5Ob8rLL/
+////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////8A
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAA==
+) );
 
 =head1 NAME
 
@@ -251,6 +313,7 @@ sub evalhash {
 			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
 				$self->{_width_}{$parent}{$out{-name}} = "\$self->{$parent}->ScaleWidth"; # since we know $parent must be direct ancestor
 				push @{$self->{_worder_}{$parent}}, $out{-name};
+				$out{-width} = eval "{ package main; no strict; use Win32::GUI; \$self->{$parent}->ScaleWidth }"; print STDERR $@ if $@;
 			}
 		}
 		
@@ -261,6 +324,7 @@ sub evalhash {
 			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
 				$self->{_height_}{$parent}{$out{-name}} = "\$self->{$parent}->ScaleHeight";
 				push @{$self->{_horder_}{$parent}}, $out{-name};
+				$out{-height} = eval "{ package main; no strict; use Win32::GUI; \$self->{$parent}->ScaleHeight }"; print STDERR $@ if $@;
 			}
 		}
 		
@@ -271,6 +335,7 @@ sub evalhash {
 			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
 				$self->{_left_}{$parent}{$out{-name}} = "0";
 				push @{$self->{_lorder_}{$parent}}, $out{-name};
+				$out{-left} = 0;
 			}
 		}
 		
@@ -281,6 +346,7 @@ sub evalhash {
 			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
 				$self->{_top_}{$parent}{$out{-name}} = "0";
 				push @{$self->{_torder_}{$parent}}, $out{-name};
+				$out{-top} = 0;
 			}
 		}
 	}
@@ -374,8 +440,9 @@ sub new {
 
 	my $s = new XML::Twig(
 		TwigHandlers => {
-			Script     => sub { $self->PreExec(@_) },
-			PreExec    => sub { $self->PreExec(@_) },
+			Script     => sub { $self->WGXPre(@_) },
+			PreExec    => sub { $self->WGXPre(@_) },
+			WGXPre    => sub { $self->WGXPre(@_) },
 		}
 	);
 
@@ -393,6 +460,7 @@ sub new {
 	foreach ($root->children()) {
 		$self->debug($_->{'att'}->{'name'});
 		$self->debug($_->gi);
+		next if $_->gi eq 'WGXPost' or $_->gi eq 'PostExec';
 
 		if (exists &{$_->gi}) {
 			&{\&{$_->gi}}($self, $t, $_);
@@ -410,12 +478,19 @@ sub new {
 
 	foreach (sort keys %{$self->{_show_}}) {
 		$self->debug("show widget $_ with command ${$self->{_show_}}{$_}");
+		
+		if (${$self->{_show_}}{$_} =~ /\$self|(^\s*exec:)/) {
+			(my $eval = ${$self->{_show_}}{$_}) =~ s/(^\s*exec:)//;
+			${$self->{_show_}}{$_} = eval "{ package main; no strict; use Win32::GUI; ".$eval."}"; print STDERR $@ if $@;
+		}
+		
 		$self->{$_}->Show(${$self->{_show_}}{$_});
 	}
 
 	my $u = new XML::Twig(
 		TwigHandlers => {
-			PostExec    => sub { $self->PostExec(@_) },
+			PostExec    => sub { $self->WGXPost(@_) },
+			WGXPost    => sub { $self->WGXPost(@_) },
 		}
 	);
 
@@ -432,12 +507,13 @@ being added to this module.
 
 =over 4
 
-=item <PreExec>
+=item <WGXPre>
 
-The <PreExec> element is parsed before GUI construction and is useful for defining subroutines
+The <WGXPre> element is parsed before GUI construction and is useful for defining subroutines
 and global variables. Code is wrapped in a { package main; no strict; .. } so that if subroutines
 are created they can contain variables in your program including Win32::GUI::XMLBuilder instances.
 The current Win32::GUI::XMLBuilder instance can also be accessed outside subroutines as $self.
+If any data is returned it must be valid XML that will be parsed once by the WGXPost phase, see below.
 
 Since you may need to use a illegal XML characters within this element such as
 
@@ -450,12 +526,12 @@ Since you may need to use a illegal XML characters within this element such as
 you can use the alternative predefined entity reference or enclose this data in a "<![CDATA[" "]]>" section.
 Please look at the samples and read http://www.w3schools.com/xml/xml_cdata.asp.
 
-The <PreExec> element was previously called as <Script> and is deprecated. The <Script> tage remains
+The <WGXPre> element was previously called <PreExec>. The <PreExec> tag is deprecated but remains
 only for backward compatibility and will be removed in a later release.
 
 =cut
 
-sub PreExec {
+sub WGXPre {
 	my ($self, $t, $e) = @_;
 
 	$self->debug($e->text);
@@ -468,14 +544,27 @@ sub PreExec {
 	$e->erase();
 }
 
-=item <PostExec>
+=item <WGXExec>
 
-The <PostExec> element is parsed after GUI construction and allows code to be included at the end of an XML file.
-It otherwise behaves exactly the same as <PreExec> and can be used to place _Resize subroutines.
+The <WGXExec> element is parsed during GUI construction and allows code to be inserted at arbitrary points in the code.
+It otherwise behaves exactly the same as <WGXPre> and can be used to place _Resize subroutines. If any data is returned
+it must be valid XML that will be parsed once by the WGXPost phase, see below.
 
 =cut
 
-sub PostExec {
+sub WGXExec { 	WGXPre(@_) }
+
+=item <WGXPost>
+
+The <WGXPost> element is parsed after GUI construction and allows code to be included at the end of an XML file.
+It otherwise behaves exactly the same as <WGXPre> and can be used to place _Resize subroutines.
+
+The <WGXPost> element was previously called <PostExec>. The <PostExec>
+tag is deprecated but remains only for backward compatibility and will be removed in a later release.
+
+=cut
+
+sub WGXPost {
 	my ($self, $t, $e) = @_;
 
 	$self->debug($e->text);
@@ -484,7 +573,7 @@ sub PostExec {
 	$self->debug($ret);
 }
 
-=item <Icon>
+=item <Icon>, <Bitmap> and <Cursor> elements.
 
 The <Icon> element allows you to specify an Icon for your program.
 
@@ -496,7 +585,7 @@ The <Bitmap> element allows you to specify an Bitmap for your program.
 
 The <Cursor> element allows you to specify an Cursor for your program.
 
-	<Icon file="mycursor.cur" name='Cursor' />
+	<Cursor file="mycursor.cur" name='Cursor' />
 
 =cut
 
@@ -523,18 +612,25 @@ sub _GenericFile {
 
 sub ImageList {
 	my ($self, $t, $e) = @_;
-	my $name = $self->genname($e);
-	my $width   = $e->{'att'}->{'width'}  || 16;
-	my $height  = $e->{'att'}->{'height'} || 16;
+	my $name    = $self->genname($e);
+	my %opt     = $self->evalhash($e);
+	my $width   = $opt{-width}  || 16;
+	my $height  = $opt{-height} || 16;
 	my $initial = $e->children_count();
-	my $growth  = $e->{'att'}->{'growth'} || (2 * $initial);
+	my $growth  = $opt{-growth} || (2 * $initial);
 
 	$self->debug("\nImageList: $name");
 	$self->{$name} = new Win32::GUI::ImageList($width, $height, 0, $initial, $growth) || $self->error;
 
 	foreach ($e->children()) {
-		$self->{$name}->Add($_->{'att'}->{'bitmap'}, $_->{'att'}->{'mask'});
-		$self->debug($_->{'att'}->{'bitmap'});
+		my %chopt = $self->evalhash($_);
+		if (exists $chopt{-bitmap}) {
+			$self->{$name}->Add($chopt{-bitmap}, $chopt{-mask});
+			$self->debug($chopt{-bitmap});
+		} elsif (exists $chopt{-icon}) {
+			$self->{$name}->AddIcon($chopt{-icon});
+			$self->debug($chopt{-icon});
+		}
 	}
 }
 
@@ -565,6 +661,14 @@ You can create a <Class> element,
 
 that can be applied to a <Window .. class='$self->{MyClass}'>. The name of a class must be unique
 over all instances of Win32::GUI::XMLBuilder instances!
+
+Typically one might add an icon to your application using a Class element, i.e.
+
+	<GUI>
+	 <Icon file="myicon.ico" name='MyIcon'/>
+	 <Class name='MyClass' icon='$self->{MyIcon}'/>
+	 <Window class='$self->{MyClass}'/>
+	</GUI>
 
 =cut
 
@@ -960,10 +1064,10 @@ sub TabStrip {
 A WGXSplitter can be created using the following structure: -
 
 	<WGXSplitter ...>
-	 <Item name='P0' text='Zero'>
+	 <Item>
 	  <Label text='Tab 1' .... />
 	 </Item>
-	 <Item name='P1' text='One'>
+	 <Item>
 	  <Label text='Tab 2' .... />
 	   ..other elements, etc...
 	 </Item>
@@ -1026,7 +1130,7 @@ sub WGXSplitter {
 		}";
 	}
 
-	$self->debug("\WGXSplitter: $name; Parent: $parent");
+	$self->debug("\nWGXSplitter: $name; Parent: $parent");
 	$self->{$name} = $self->{$parent}->AddSplitter($self->evalhash($e)) || $self->error;
 	my $tabcount = 0;
 	foreach my $item ($e->children()) {
@@ -1085,9 +1189,7 @@ sub WGXSplitter {
 
 Allows you to create a timer for use in your program.
 
-	<Timer name='start_thread	'
-	 elapse='8'
-	/>
+	<Timer name='start_thread' elapse='8'/>
 
 =cut
 
@@ -1121,11 +1223,25 @@ sub _Generic {
 	my $parent = $self->getParent($e);
 
 	$self->debug("\n$widget (_Generic): $name; Parent: $parent");
-	if ($widget =~ /^$qrLRWidgets/ || $widget =~ /^$qrTop/) {
+	if ($widget =~ /^$qrLRWidgets/) {
 		$e->{'att'}->{'parent'} = "\$self->{$parent}";
 		$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
-	} else {
+	}
+	elsif ($widget =~ /^$qrTop/) {
+		$e->{'att'}->{'parent'} = "\$self->{$parent}";
+		$self->{$name} = eval "new Win32::GUI::$widget(\$self->evalhash(\$e))" || $self->error;
+		$self->{$name}->SetEvent('Resize', $self->genresize($name));
+	}
+	else {
 		$self->{$name} = eval "new Win32::GUI::$widget(\$self->{$parent}, \$self->evalhash(\$e))" || $self->error;
+	}
+	
+	foreach ($e->children()) {
+		if (exists &{$_->gi}) {
+			&{\&{$_->gi}}($self, $t, $_);
+		}	else {
+			$self->_Generic($t, $_);
+		}
 	}
 }
 

@@ -4,8 +4,7 @@
 -->
 <GUI>
 	<Cursor name='Cursor' file='harrow.cur'/>
-	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$self->{I}' cursor='$self->{Cursor}'/>
+	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON' cursor='$self->{Cursor}'/>
 	<Menu name='M'>
 		<Item name='Options' text='&amp;Options'/>
 		<Item name='Indent' text='>Set &amp;indent...'/>
@@ -61,8 +60,7 @@
 			text='Set'
 		/>
 	</Window>
-	<PostExec>
-	<![CDATA[
+	<WGXPost><![CDATA[
 	
 	my $dblclick = 0;
 	
@@ -168,6 +166,5 @@
 			$gui->{TV}->SetImageList($IL);
 		}
 	}
-	]]>
-	</PostExec>
+	]]></WGXPost>
 </GUI>

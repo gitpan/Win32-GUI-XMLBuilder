@@ -11,11 +11,9 @@
 >
 	<Label name='L' size='[150, 50]' text='Press Shift-A or Ctrl-X'/>
 </Window>
-<PostExec>
-<![CDATA[
+<WGXPost><![CDATA[
 	sub CX { 
 		$self->{L}->Text("Control-X pressed"); 
 	}
-]]>
-</PostExec>
+]]></WGXPost>
 </GUI>

@@ -6,15 +6,17 @@ Win32::GUI::Dialog;
 
 __END__
 <GUI>
-	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$self->{I}'/>
+	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON'/>
 	<Window name='W'
 		dim='0,0,200,200' 
 		show='1'
 		title='Treeview Example'
 		class='$self->{C}'
 	>
-		<StatusBar name='S' text='exec:$Win32::GUI::XMLBuilder::AUTHOR' dim='0, $self->{W}->ScaleHeight-$self->{S}->Height, $self->{W}->ScaleWidth, $self->{S}->Height'/>
+		<StatusBar name='S' text='exec:$Win32::GUI::XMLBuilder::AUTHOR' 
+			top='exec:$self->{W}->ScaleHeight - $self->{S}->Height if defined $self->{S}'
+			height='exec:$self->{S}->Height if defined $self->{S}'
+		/>
 		<TreeView name='TV' width='$self->{W}->ScaleWidth' height='$self->{W}->ScaleHeight-$self->{S}->Height' lines='1' rootlines='1' buttons='1' visible='1'>
 			<Item name='TV_0' text='TV_0' selectedimage='1'>
 				<Item name='TV_0_0' text='TV_0_0'>

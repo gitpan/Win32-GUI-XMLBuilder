@@ -1,6 +1,5 @@
 <GUI>
-	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$self->{I}'/>
+	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON'/>
 	<Window name='W'
 		dim='100, 100, 400, 150'
 		title='System Tray Example'

@@ -27,24 +27,22 @@ sub hashwalk {
 
 __END__
 <GUI>
-	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$self->{I}'/>
+	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON'/>
 	<Window name='W'
 		dim='0, 0, 300, 250'
 		title='Hash to Treeview Example'
 		class='$self->{C}'
 	>
 		<StatusBar name='S'
-			dim='0, $self->{W}->ScaleHeight - $self->{S}->Height, $self->{W}->ScaleWidth, $self->{S}->Height'
+			top='exec:$self->{W}->ScaleHeight - $self->{S}->Height if defined $self->{S}'
+			height='exec:$self->{S}->Height if defined $self->{S}'
 			text='exec:$Win32::GUI::XMLBuilder::AUTHOR'
 		/>
 		<TreeView
-			width='$self->{W}->ScaleWidth' height='$self->{W}->ScaleHeight-$self->{S}->Height'
+			height='$self->{W}->ScaleHeight - $self->{S}->Height'
 			lines='1' rootlines='1' buttons='1' visible='1'
 		>
-			<PreExec>
-				return hashwalk(\%R, 2)
-			</PreExec>
+			<WGXPre>return hashwalk(\%R, 2)</WGXPre>
 		</TreeView>
 	</Window>
 </GUI>

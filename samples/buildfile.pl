@@ -6,11 +6,12 @@
 use strict;
 use Win32::GUI::XMLBuilder;
 
-my $_gui;
-our $gui;
+my $__FILE__;
+
+my $gui;
 
 if ($ARGV[0] eq '') {
-	$_gui = Win32::GUI::XMLBuilder->new(*DATA);
+	Win32::GUI::XMLBuilder->new(*DATA);
 } else {
 	$gui = Win32::GUI::XMLBuilder->new({file=>$ARGV[0]});
 }
@@ -18,7 +19,7 @@ if ($ARGV[0] eq '') {
 Win32::GUI::Dialog;
 
 sub loadGUI {
-	my $f = GUI::GetOpenFileName(
+	$__FILE__ = GUI::GetOpenFileName(
 		-title     => 'Choose XML file...',
 		-directory => '.',
 		-filter    => [ 
@@ -28,23 +29,30 @@ sub loadGUI {
 		],
 	);
 
-	if ($f ne '') {
+	&reloadGUI;
+}
+
+sub reloadGUI {
+	if ($__FILE__ ne '') {
+		foreach (%{$gui}) {
+			$gui->{$_}->DESTROY if ref $gui->{$_} eq 'Win32::GUI::Window';
+		}
 		undef $gui;
-		$gui = Win32::GUI::XMLBuilder->new({file=>$f});
+		$gui = Win32::GUI::XMLBuilder->new({file=>$__FILE__});
 	}
 }
 
 __END__
 <GUI>
-	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='__CLASS__' icon='$self->{I}' />
-	<Window
-		dim='100, 100, 250, 100'
+	<Class name='__CLASS__' icon='exec:$Win32::GUI::XMLBuilder::ICON' />
+	<Window name='MAIN'
+		dim='0, 0, 210, 115'
 		title='Build XMLBuilder File'
 		class='$self->{__CLASS__}'
 		onTerminate='sub { $_[0]->PostQuitMessage(0); return -1; }'
 		show='1'
 	>
+	<WGXExec>$self->{MAIN}->Center;</WGXExec>
 		<Label
 			dim='20, 10, 220, 30'
 			text='CLI Usage: buildfile.pl &lt;xml file&gt;, or'
@@ -58,6 +66,11 @@ __END__
 			dim='135, 30, 100, 20'
 			text='Debug'
 			onClick='sub { $ENV{WIN32GUIXMLBUILDER_DEBUG} = $_[0]->Checked; }'
+		/>
+		<Button
+			dim='20, 50, 100, 20'
+			text='Reload'
+			onClick='reloadGUI'
 		/>
 	</Window>
 </GUI>

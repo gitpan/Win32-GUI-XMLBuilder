@@ -1,5 +1,19 @@
 CHANGES
 
+0.34 -> 0.35
+Allow _Generic Widgets to have children.
+ Thus top level widgets as children have children.
+Fix: replay auto dim value to widget option on creation.
+Add Resize event to top level wigets as childern.
+Fix: PostExec(WGXPost) not evaled twice on each parse.
+Allow 'show' attribute to accept '$self' or 'exec:' values.
+PostExec/PreExec replaced with WGXPost/WGXExec resp.
+New element WGXExec introduced.
+buildfile.pl now explicity destroys previous GUI if exists.
+buildfile.pl now has a reload function.
+Use inline bitmap to hold default WGX icon.
+Check StatusBar is defined before fetching height in examples.
+
 0.33 -> 0.34
 Fixed doc error SplitterPair -> WGXSplitter.
 Replace internal _context_ var with getParent func.

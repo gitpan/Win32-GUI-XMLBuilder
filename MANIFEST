@@ -26,7 +26,6 @@ samples/treeview.pl
 samples/tv.xml
 samples/wizard.xml
 samples/wizard.pl
-samples/XMLBuilder.ico
 t/use.t
 TODO
 CHANGES

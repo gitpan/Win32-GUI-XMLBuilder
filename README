@@ -1,5 +1,5 @@
-Win32::GUI::XMLBuilder version 0.30
-===================================
+Win32::GUI::XMLBuilder
+======================
 
 Copyright (c) 2004 Blair Sutton. All rights reserved. 
 This program is free software; you can redistribute 
@@ -27,4 +27,4 @@ Please read the perldoc and try the samples.
 
 AUTHOR
 
-   Blair Sutton (b.sutton@odey.com)
+   Blair Sutton (bsdz@cpan.org)

@@ -14,7 +14,8 @@
 			title='Window 2'
 			show='0'
 			onTerminate='sub { $self->{W2}->Hide; $self->{W1}->Enable; $self->{W1}->BringWindowToTop; return 0; }'
-		/>
-
+		>
+			<Label text='Window 2'/>
+		</Window>
 	</Window>
 </GUI>

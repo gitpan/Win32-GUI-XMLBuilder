@@ -40,8 +40,7 @@ sub initRegistry {
 
 __END__
 <GUI>
-	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$self->{I}'/>
+	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON'/>
 	<Window name='W'
 		dim='exec:$registry->{left}, exec:$registry->{top}, exec:$registry->{width}, exec:$registry->{height}'
 		title='Persistent Registry Settings Example'
@@ -49,7 +48,8 @@ __END__
 		eventmodel='both'
 	>
 		<StatusBar name='S'
-			dim='0, $self->{W}->ScaleHeight-$self->{S}->Height, $self->{W}->ScaleWidth, $self->{S}->Height'
+			top='exec:$self->{W}->ScaleHeight - $self->{S}->Height if defined $self->{S}'
+			height='exec:$self->{S}->Height if defined $self->{S}'
 			text='exec:$Win32::GUI::XMLBuilder::AUTHOR'
 		/>
 	</Window>

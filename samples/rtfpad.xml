@@ -1,29 +1,24 @@
 <GUI>
-	<Icon name='I' file='XMLBuilder.ico'/>
-	<Class name='C' icon='$self->{I}'/>
+	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON'/>
 	<Class name='RE' extends='RichEdit' widget='RichEdit'/>
 	<Menu name='M'>
 		<Item name='File' text='&amp;File'/>
 		<Item text='>New'/>
 		<Item name='Open' text='>Open...'/>
-		<PreExec>
-		<![CDATA[
+		<WGXPre><![CDATA[
 			sub Open_Click {
 				my $f = GUI::GetOpenFileName(-title=>'Open...',-directory=>'.',-filter=>["Rich Text (*.rtf)"=>"*.rtf","All files","*.*"]);
 				$self->{R}->Load($f) if -f $f;
 			}
-		]]>
-		</PreExec>
+		]]></WGXPre>
 		<Item text='>Save'/>
 		<Item name='SaveAs' text='>Save As...'/>
-		<PreExec>
-		<![CDATA[
+		<WGXPre><![CDATA[
 			sub SaveAs_Click {
 				my $f = GUI::GetSaveFileName(-title=>'Save As...',-directory=>'.',-file=>"\0"." "x256,-filter=>["Rich Text (*.rtf)"=>"*.rtf","All files","*.*"]);
-				$gui->{R}->Save($f) if -f $f;
+				$self->{R}->Save($f) if -f $f;
 			}
-		]]>
-		</PreExec>
+		]]></WGXPre>
 		<Item text='>-'/>
 		<Item text='>Page Setup...'/>
 		<Item text='>Print...'/>
@@ -38,38 +33,37 @@
 		<Item text='>Delete'/>
 		<Item name='Format' text='&amp;Format'/>
 		<Item name='Font' text='>Font...'/>
-		<PreExec>
-		<![CDATA[
+		<WGXPre><![CDATA[
 			sub Font_Click {
 				my @f = Win32::GUI::ChooseFont();
 				if ($#f > 0) {
 					my %f = @f;
 					delete $f{-size}; # ??
-					$gui->{F} = new Win32::GUI::Font(%f);
-					$gui->{R}->SetFont($self->{F});
+					$self->{F} = new Win32::GUI::Font(%f);
+					$self->{R}->SetFont($self->{F});
 				}
 			}
-		]]>
-		</PreExec>
+		]]></WGXPre>
 	</Menu>
 	<Window name='W' dim='0, 0, 1024, 768' class='$self->{C}' menu='$self->{M}' title='Untitled - RTFpad'>
-		<StatusBar name='S' text='RTFpad 0.1 - Blair Sutton 2003' top='$self->{W}->ScaleHeight-$self->{S}->Height' left='0' width='$self->{W}->ScaleWidth' height='$self->{S}->Height'/>
+		<StatusBar name='S' text='exec:$Win32::GUI::XMLBuilder::AUTHOR' 
+			top='exec:$self->{W}->ScaleHeight - $self->{S}->Height if defined $self->{S}'
+			height='exec:$self->{S}->Height if defined $self->{S}'
+		/>
 		<RichEdit name='R'
-      dim='0, 0, $self->{W}->ScaleWidth, $self->{W}->ScaleHeight-$self->{S}->Height'
-      style='exec:WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_LEFT|ES_MULTILINE|ES_AUTOVSCROLL' exstyle='exec:WS_EX_CLIENTEDGE'
+			height='$self->{W}->ScaleHeight - $self->{S}->Height'
+			pushstyle='exec:WS_VSCROLL|ES_LEFT|ES_MULTILINE|ES_AUTOVSCROLL' popstyle='exec:WS_EX_CLIENTEDGE'
 			class='$self->{RE}'
 			onRightClick='sub { print "hello right click\n"; }'
-    />
-		<PostExec>
-		<![CDATA[
+		/>
+		<WGXPost><![CDATA[
 			$self->{R}->SendMessage(1093, 0, 1);
 			$self->{R}->SetEventMask(ENM_MOUSEEVENTS);
     	sub R_RightClick { # broken because of bug in RichEdit 
 				my ($x, $y) = Win32::GUI::GetCursorPos();
-				$gui->{W}->TrackPopupMenu($gui->{P}->{PopupMenu}, $x, $y-50);
+				$self->{W}->TrackPopupMenu($self->{P}->{PopupMenu}, $x, $y-50);
 			}
-		]]>
-		</PostExec>
+		]]></WGXPost>
 	</Window>
 	<Menu name='P'>
 		<Item name='PopupMenu' text='PopupMenuFunctions'/>
@@ -82,6 +76,5 @@
 		<Item text='>-'/>
 		<Item text='>Select All'/>
 	</Menu>
-
 </GUI>
 
