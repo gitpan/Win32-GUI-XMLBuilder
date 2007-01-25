@@ -29,6 +29,13 @@ samples/tv.xml
 samples/wgxpanel_wizard.xml
 samples/wizard.xml
 samples/wizard.pl
+pod/autoresize-changed.png
+pod/autoresize-default.png
+pod/button1.png
+pod/button2.png
+pod/dialogbox.png
+pod/wgx.pod
+pod/window.png
 t/use.t
 TODO
 CHANGES

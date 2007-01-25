@@ -1,5 +1,8 @@
 CHANGES
 
+0.38 -> 0.39
+Added Perl Journal Article.
+
 0.37 -> 0.38
 Updated to work with Win32::GUI 1.05.
 Import specific constants.

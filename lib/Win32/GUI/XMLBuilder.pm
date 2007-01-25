@@ -4,7 +4,7 @@
 #
 # 14 Dec 2003 by Blair Sutton <bsdz@cpan.org>
 #
-# Version: 0.38 (20th January 2007)
+# Version: 0.39 (25th January 2007)
 #
 # Copyright (c) 2003-2007 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.38;
+our $VERSION = 0.39;
 our @ISA     = qw(Exporter);
 
 our $AUTHOR = "Blair Sutton - 2007 - Win32::GUI::XMLBuilder - $VERSION";
