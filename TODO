@@ -6,6 +6,7 @@ Win32::GUI::ImageList - support Icon, Masked
 Win32::GUI::Toolbar - Add subitem support
 buildfile does not chdir and basename on Reload 
 genname should check if name already in use!
+Fix WGXPost, executes code twice!
 
 Need to support these objects
 =============================

@@ -4,9 +4,9 @@
 #
 # 14 Dec 2003 by Blair Sutton <bsdz@cpan.org>
 #
-# Version: 0.37 (9th October 2004)
+# Version: 0.38 (20th January 2007)
 #
-# Copyright (c) 2004 Blair Sutton. All rights reserved.
+# Copyright (c) 2003-2007 Blair Sutton. All rights reserved.
 # This program is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 #
@@ -16,13 +16,13 @@ package Win32::GUI::XMLBuilder;
 
 use strict;
 require Exporter;
-our $VERSION = 0.37;
+our $VERSION = 0.38;
 our @ISA     = qw(Exporter);
 
-our $AUTHOR = "Blair Sutton - 2004 - Win32::GUI::XMLBuilder - $VERSION";
+our $AUTHOR = "Blair Sutton - 2007 - Win32::GUI::XMLBuilder - $VERSION";
 
 use XML::Twig;
-use Win32::GUI;
+use Win32::GUI qw(WS_CAPTION WS_SIZEBOX WS_EX_CONTROLPARENT WS_CHILD DS_CONTROL WS_VISIBLE WS_VSCROLL WS_TABSTOP);
 
 use Win32::GUI::BitmapInline ();
 our $ICON = newIcon Win32::GUI::BitmapInline( q(
@@ -299,13 +299,13 @@ sub evalhash {
 		if ($k =~ /^on[A-Z]/) {
 			$out{-notify} = 1;
 			if ($in{$k} =~ /^\s*sub\s*\{.*\}\s*/s) {
-				$out{-$k} = eval "{ package main; no strict; use Win32::GUI; ".$in{$k}."}"; print STDERR $@ if $@;
+				$out{-$k} = eval "{ package main; no strict; use Win32::GUI(); ".$in{$k}."}"; print STDERR $@ if $@;
 			} else {
 				$out{-$k} = $in{$k};
 			}
 		} elsif ($in{$k} =~ /\$self|(^\s*exec:)/) {
 			(my $eval = $in{$k}) =~ s/(^\s*exec:)//;
-			$out{-$k} = eval "{ package main; no strict; use Win32::GUI; ".$eval."}"; print STDERR $@ if $@;
+			$out{-$k} = eval "{ package main; no strict; use Win32::GUI(); ".$eval."}"; print STDERR $@ if $@;
 		} else {
 			$out{-$k} = $in{$k};
 		}
@@ -322,7 +322,7 @@ sub evalhash {
 			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
 				$self->{_width_}{$parent}{$out{-name}} = "\$self->{$parent}->ScaleWidth"; # since we know $parent must be direct ancestor
 				push @{$self->{_worder_}{$parent}}, $out{-name};
-				$out{-width} = eval "{ package main; no strict; use Win32::GUI; \$self->{$parent}->ScaleWidth }"; print STDERR $@ if $@;
+				$out{-width} = eval "{ package main; no strict; use Win32::GUI(); \$self->{$parent}->ScaleWidth }"; print STDERR $@ if $@;
 			}
 		}
 		
@@ -333,7 +333,7 @@ sub evalhash {
 			} elsif ($e->gi !~ /^$qrNoDim/ && ref($self->{$e->parent->{'att'}->{'name'}}) =~ /^Win32::GUI::$qrTop/) {
 				$self->{_height_}{$parent}{$out{-name}} = "\$self->{$parent}->ScaleHeight";
 				push @{$self->{_horder_}{$parent}}, $out{-name};
-				$out{-height} = eval "{ package main; no strict; use Win32::GUI; \$self->{$parent}->ScaleHeight }"; print STDERR $@ if $@;
+				$out{-height} = eval "{ package main; no strict; use Win32::GUI(); \$self->{$parent}->ScaleHeight }"; print STDERR $@ if $@;
 			}
 		}
 		
@@ -491,7 +491,7 @@ sub new {
 		
 		if (${$self->{_show_}}{$_} =~ /\$self|(^\s*exec:)/) {
 			(my $eval = ${$self->{_show_}}{$_}) =~ s/(^\s*exec:)//;
-			${$self->{_show_}}{$_} = eval "{ package main; no strict; use Win32::GUI; ".$eval."}"; print STDERR $@ if $@;
+			${$self->{_show_}}{$_} = eval "{ package main; no strict; use Win32::GUI(); ".$eval."}"; print STDERR $@ if $@;
 		}
 		
 		$self->{$_}->Show(${$self->{_show_}}{$_});
@@ -840,7 +840,7 @@ sub AcceleratorTable {
 		my $key = $_->{'att'}->{'key'};
 		my $sub = $_->{'att'}->{'sub'};
 		if ($sub =~ /^\s*sub\s*\{.*\}\s*/) {
-			$sub = eval "{ package main; no strict; use Win32::GUI; ".$sub."}"; print STDERR $@ if $@;
+			$sub = eval "{ package main; no strict; use Win32::GUI(); ".$sub."}"; print STDERR $@ if $@;
 		} else {
 			$sub = \&{'::'.$sub};
 		}
@@ -915,8 +915,8 @@ sub WGXPanel {
 	$self->debug("\nWGXPanel: $name; Parent: $parent");
 
 	$e->{'att'}->{'parent'} = $self->{$parent};
-	$e->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX|WS_EX_CONTROLPARENT';
-	$e->{'att'}->{'pushstyle'} = 'exec:WS_CHILD|DS_CONTROL|WS_VISIBLE';
+	$e->{'att'}->{'popstyle'} = WS_CAPTION()|WS_SIZEBOX()|WS_EX_CONTROLPARENT();
+	$e->{'att'}->{'pushstyle'} = WS_CHILD()|DS_CONTROL()|WS_VISIBLE();
 
 	$self->debug("\nWGXPanel: $name");
 	$self->{$name} = eval "new Win32::GUI::Window(\$self->evalhash(\$e))" || $self->error;
@@ -984,7 +984,7 @@ sub TreeView_Item {
 
 Generate a combobox with drop down items specified with the <Items> elements. In addition
 to standard attributes for Win32::GUI::Combobox there is also a 'dropdown' attribute that
-automatically sets the 'pushstyle' to 'exec:WS_VISIBLE|0x3|WS_VSCROLL|WS_TABSTOP'. In 'dropdown'
+automatically sets the 'pushstyle' to 'WS_VISIBLE()|0x3|WS_VSCROLL()|WS_TABSTOP()'. In 'dropdown'
 mode an <Item> element has the additional attribute 'default'.
 
 =cut
@@ -996,7 +996,7 @@ sub Combobox {
 
 	$self->debug("\nCombobox: $name; Parent: $parent");
 
-	$e->{'att'}->{'pushstyle'} = 'exec:WS_VISIBLE|0x3|WS_VSCROLL|WS_TABSTOP' if $e->{'att'}->{'dropdown'};
+	$e->{'att'}->{'pushstyle'} = WS_VISIBLE()|0x3|WS_VSCROLL()|WS_TABSTOP() if $e->{'att'}->{'dropdown'};
 
 	$self->{$name} = $self->{$parent}->AddCombobox($self->evalhash($e)) || $self->error;
 
@@ -1018,7 +1018,7 @@ sub Combobox {
 
 Generate a listbox with drop down items specified with the <Items> elements. In addition
 to standard attributes for Win32::GUI::Listbox there is also a 'dropdown' attribute that
-automatically sets the 'pushstyle' to 'exec:WS_CHILD|WS_VISIBLE|1'. In 'dropdown' mode an <Item> element has
+automatically sets the 'pushstyle' to 'WS_CHILD()|WS_VISIBLE()|1'. In 'dropdown' mode an <Item> element has
 the additional attribute 'default'.
 
 =cut
@@ -1029,7 +1029,7 @@ sub Listbox {
 	my $parent = $self->getParent($e);
 
 	$self->debug("\nListbox: $name; Parent: $parent");
-	$e->{'att'}->{'pushstyle'} = $e->{'att'}->{'dropdown'} ? 'exec:WS_VSCROLL|WS_CHILD|WS_VISIBLE|1' : 'exec:WS_VSCROLL|WS_VISIBLE|WS_CHILD';
+	$e->{'att'}->{'pushstyle'} = $e->{'att'}->{'dropdown'} ? WS_VSCROLL()|WS_CHILD()|WS_VISIBLE()|1 : WS_VSCROLL()|WS_VISIBLE()|WS_CHILD();
 	$self->{$name} = $self->{$parent}->AddListbox($self->evalhash($e))  || $self->error;
 
  # $self->{$name}->SendMessage(0x0195, 201, 0);
@@ -1067,8 +1067,8 @@ sub Rebar {
 
 		my $f;
 		$f->{'att'}->{'parent'} = $self->{$parent};
-		$f->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX';
-		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD';
+		$f->{'att'}->{'popstyle'} = WS_CAPTION()|WS_SIZEBOX();
+		$f->{'att'}->{'pushstyle'} = WS_CHILD();
 		# push non-Band attributes into Window class
 		foreach (keys %{$item->{'att'}}) {
 			if ($_ !~ /^(image|index|bitmap|child|foreground|background|width|minwidth|minheight|text|style)$/) {
@@ -1143,9 +1143,9 @@ sub TabStrip {
 
 		my $f;
 		$f->{'att'}->{'parent'} = $self->{$parent};
-		$f->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX|WS_EX_CONTROLPARENT';
-		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD|DS_CONTROL';
-		$f->{'att'}->{'pushstyle'} .= '|WS_VISIBLE' if $tabcount == 0;
+		$f->{'att'}->{'popstyle'} = WS_CAPTION()|WS_SIZEBOX()|WS_EX_CONTROLPARENT();
+		$f->{'att'}->{'pushstyle'} = WS_CHILD()|DS_CONTROL();
+		$f->{'att'}->{'pushstyle'} |= WS_VISIBLE() if $tabcount == 0;
 
 		$self->{$name}->InsertItem($self->evalhash($item));
 
@@ -1276,9 +1276,10 @@ sub WGXSplitter {
 
 		my $f;
 		$f->{'att'}->{'parent'} = $self->{$parent};
-		$f->{'att'}->{'popstyle'} = 'exec:WS_CAPTION|WS_SIZEBOX|WS_EX_CONTROLPARENT';
-		$f->{'att'}->{'pushstyle'} = 'exec:WS_CHILD|DS_CONTROL|WS_VISIBLE';
+		$f->{'att'}->{'popstyle'} = WS_CAPTION()|WS_SIZEBOX()|WS_EX_CONTROLPARENT();
+		$f->{'att'}->{'pushstyle'} = WS_CHILD()|DS_CONTROL()|WS_VISIBLE();
 
+		
 		# push attributes into Window class
 		foreach (keys %{$item->{'att'}}) {
 			$f->{'att'}->{$_} = $item->{'att'}->{$_};

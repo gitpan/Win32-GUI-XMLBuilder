@@ -1,5 +1,11 @@
 CHANGES
 
+0.37 -> 0.38
+Updated to work with Win32::GUI 1.05.
+Import specific constants.
+Convert GUI:: to Win32::GUI::.
+Some minor fixes.
+
 0.36 -> 0.37
 New element WGXPanel.
 Inrtuction of substitution variable %P%.

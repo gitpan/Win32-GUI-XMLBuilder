@@ -9,7 +9,7 @@ WriteMakefile(
 		'lib/Win32/GUI/XMLBuilder.pm' => '$(INST_LIBDIR)/XMLBuilder.pm',
 	},
 	PREREQ_PM   => {
-		'Win32::GUI'	=> '0.0.671',
+		'Win32::GUI'	=> '1.05',
 		'XML::Twig'		=> '3.14',
 	},
 	($] ge '5.005') ?

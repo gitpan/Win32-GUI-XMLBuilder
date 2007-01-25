@@ -24,14 +24,14 @@ if (! -f $ARGV[0]) {
 Win32::GUI::Dialog;
 
 sub loadGUI {
-	$__FILE__ = GUI::GetOpenFileName(
+	$__FILE__ = Win32::GUI::GetOpenFileName(
 		-title     => 'Choose XML file...',
 		-directory => '.',
 		-filter    => [ 
+			"XMLBuilder Files (*,xml, *.wgx)" => "*.xml;*.wgx",
 			"XML (*.xml)" => "*.xml",
-			"XMLBuilder (*.wgx)" => "*.wgx",
-			"All files", 
-			"*.*",	
+			"WGX (*.wgx)" => "*.wgx",
+			"All files" => "*.*",
 		],
 	);
 

@@ -62,10 +62,10 @@ xsi:schemaLocation="http://www.numeninest.com/Perl/WGX http://www.numeninest.com
 	<Class name='C' icon='exec:$Win32::GUI::XMLBuilder::ICON'/>
 	<WGXMenu name="M">
 		<Button name='File' text='&amp;File'>
-			<Item text='New'>
+			<Button text='New'>
 				<Item text='Type One Document'/>
 				<Item text='Type Two Document'/>
-			</Item>
+			</Button>
 			<Item separator='1'/>
 			<Item text='Open...'/>
 			<Item separator='1'/>
